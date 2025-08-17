@@ -1,4 +1,4 @@
-# findtorontopcp
+# find ontario doctors
 find local doctors by distance
 
 using this api
@@ -22,3 +22,11 @@ curl 'https://register.cpso.on.ca/Get-Search-Results/' \
 >   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36' \
 >   -H 'x-requested-with: XMLHttpRequest' \
 >   --data-raw 'cbx-includeinactive=on&postalCode=M2N+4&doctorType=Any&LanguagesSelected=ENGLISH'
+
+## required yearly updates
+
+Postal code of information is provided by the federal government yearly here: https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index-eng.cfm
+
+This application currently uses the 2025 data.
+
+Download the Shapefile for the new year, unzip it, and put the resulting folder in postcode_geodata.

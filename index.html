@@ -16,8 +16,18 @@
         <section class="search-section">
             <form id="searchForm">
                 <div class="form-group">
-                    <label for="postalCode">Postal Code</label>
-                    <input type="text" id="postalCode" name="postalCode" placeholder="e.g., M5H 2N2" required>
+                    <label for="addressSearch">Address</label>
+                    <div class="address-search-container">
+                        <input type="text" id="addressSearch" name="addressSearch" placeholder="Enter an address in Toronto..." autocomplete="off">
+                        <div id="addressSuggestions" class="address-suggestions"></div>
+                    </div>
+                    <input type="hidden" id="selectedLat" name="selectedLat">
+                    <input type="hidden" id="selectedLng" name="selectedLng">
+                </div>
+                
+                <div class="form-group">
+                    <label for="postalCode">Or enter Postal Code</label>
+                    <input type="text" id="postalCode" name="postalCode" placeholder="e.g., M5H 2N2">
                 </div>
 
                 <div class="form-group">

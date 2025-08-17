@@ -1,24 +1,84 @@
 let allDoctors = [];
 let userCoordinates = null;
+let addressSearchTimeout = null;
+let selectedSuggestionIndex = -1;
 
 document.addEventListener('DOMContentLoaded', function() {
     const searchForm = document.getElementById('searchForm');
     const useLocationCheckbox = document.getElementById('useLocation');
     const postalCodeInput = document.getElementById('postalCode');
+    const addressSearchInput = document.getElementById('addressSearch');
+    const addressSuggestionsDiv = document.getElementById('addressSuggestions');
     const filtersSection = document.getElementById('filtersSection');
     const resultsContainer = document.getElementById('resultsContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
     
     searchForm.addEventListener('submit', handleSearch);
     
+    // Address search functionality
+    addressSearchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        if (addressSearchTimeout) {
+            clearTimeout(addressSearchTimeout);
+        }
+        
+        if (query.length < 3) {
+            hideSuggestions();
+            // Re-enable postal code if address is cleared
+            if (query.length === 0) {
+                postalCodeInput.disabled = false;
+                postalCodeInput.placeholder = 'e.g., M5H 2N2';
+                document.getElementById('selectedLat').value = '';
+                document.getElementById('selectedLng').value = '';
+                userCoordinates = null;
+            }
+            return;
+        }
+        
+        addressSearchTimeout = setTimeout(() => {
+            fetchAddressSuggestions(query);
+        }, 300);
+    });
+    
+    addressSearchInput.addEventListener('keydown', function(e) {
+        const suggestions = addressSuggestionsDiv.querySelectorAll('.address-suggestion-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestions.length - 1);
+            highlightSuggestion(suggestions);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+            highlightSuggestion(suggestions);
+        } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+            e.preventDefault();
+            suggestions[selectedSuggestionIndex].click();
+        } else if (e.key === 'Escape') {
+            hideSuggestions();
+        }
+    });
+    
+    // Click outside to close suggestions
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.address-search-container')) {
+            hideSuggestions();
+        }
+    });
+    
     useLocationCheckbox.addEventListener('change', function() {
         if (this.checked) {
             getCurrentLocation();
             postalCodeInput.disabled = true;
             postalCodeInput.placeholder = 'Using your location...';
+            addressSearchInput.disabled = true;
+            addressSearchInput.placeholder = 'Using your location...';
         } else {
             postalCodeInput.disabled = false;
             postalCodeInput.placeholder = 'e.g., M5H 2N2';
+            addressSearchInput.disabled = false;
+            addressSearchInput.placeholder = 'Enter an address in Toronto...';
             userCoordinates = null;
         }
     });
@@ -32,15 +92,109 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+async function fetchAddressSuggestions(query) {
+    try {
+        const response = await fetch(`/api/address-suggest?searchString=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.suggestions && data.suggestions.length > 0) {
+            displaySuggestions(data.suggestions);
+        } else {
+            hideSuggestions();
+        }
+    } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+        hideSuggestions();
+    }
+}
+
+function displaySuggestions(suggestions) {
+    const suggestionsDiv = document.getElementById('addressSuggestions');
+    suggestionsDiv.innerHTML = '';
+    selectedSuggestionIndex = -1;
+    
+    suggestions.forEach((suggestion, index) => {
+        const div = document.createElement('div');
+        div.className = 'address-suggestion-item';
+        div.textContent = suggestion.address;
+        div.dataset.keyString = suggestion.keyString;
+        
+        div.addEventListener('click', async function() {
+            await selectAddress(suggestion);
+        });
+        
+        suggestionsDiv.appendChild(div);
+    });
+    
+    suggestionsDiv.classList.add('active');
+}
+
+function highlightSuggestion(suggestions) {
+    suggestions.forEach((item, index) => {
+        if (index === selectedSuggestionIndex) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+function hideSuggestions() {
+    const suggestionsDiv = document.getElementById('addressSuggestions');
+    suggestionsDiv.classList.remove('active');
+    suggestionsDiv.innerHTML = '';
+    selectedSuggestionIndex = -1;
+}
+
+async function selectAddress(suggestion) {
+    const addressSearchInput = document.getElementById('addressSearch');
+    const selectedLatInput = document.getElementById('selectedLat');
+    const selectedLngInput = document.getElementById('selectedLng');
+    const postalCodeInput = document.getElementById('postalCode');
+    
+    addressSearchInput.value = suggestion.address;
+    hideSuggestions();
+    
+    try {
+        const response = await fetch(`/api/geocode?keyString=${encodeURIComponent(suggestion.keyString)}`);
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates.length > 0) {
+            const location = data.candidates[0].location;
+            selectedLatInput.value = location.y;
+            selectedLngInput.value = location.x;
+            userCoordinates = { lat: location.y, lng: location.x };
+            
+            // Clear postal code when address is selected
+            postalCodeInput.value = '';
+            postalCodeInput.disabled = true;
+            postalCodeInput.placeholder = 'Using selected address';
+        }
+    } catch (error) {
+        console.error('Error geocoding address:', error);
+    }
+}
+
 async function handleSearch(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     const includeInactive = formData.get('includeInactive') ? 'on' : '';
-    const postalCode = formData.get('postalCode').replace(/\s/g, '+');
+    let postalCode = formData.get('postalCode').replace(/\s/g, '+');
     const doctorType = formData.get('doctorType');
     const language = formData.get('language');
     const maxDistance = parseFloat(formData.get('maxDistance'));
+    const selectedLat = formData.get('selectedLat');
+    const selectedLng = formData.get('selectedLng');
+    
+    // If coordinates are selected from address search, use them
+    if (selectedLat && selectedLng) {
+        userCoordinates = { lat: parseFloat(selectedLat), lng: parseFloat(selectedLng) };
+        // Use a default postal code for the search API (Toronto city center)
+        if (!postalCode) {
+            postalCode = 'M5H+2N2';
+        }
+    }
     
     showLoading(true);
     
