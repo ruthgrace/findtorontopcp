@@ -2,18 +2,34 @@ let allDoctors = [];
 let userCoordinates = null;
 let addressSearchTimeout = null;
 let selectedSuggestionIndex = -1;
+let torontoPostalCodes = [];
+let postalCodeBoundaries = null;
+let fsaBoundaries = null;
+let geocodeCache = {}; // Cache for geocoding results
 
 document.addEventListener('DOMContentLoaded', function() {
     const searchForm = document.getElementById('searchForm');
     const useLocationCheckbox = document.getElementById('useLocation');
-    const postalCodeInput = document.getElementById('postalCode');
     const addressSearchInput = document.getElementById('addressSearch');
     const addressSuggestionsDiv = document.getElementById('addressSuggestions');
     const filtersSection = document.getElementById('filtersSection');
     const resultsContainer = document.getElementById('resultsContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
     
+    // Load Toronto postal codes and boundaries
+    loadTorontoPostalCodes();
+    loadFSABoundaries();
+    
     searchForm.addEventListener('submit', handleSearch);
+    
+    // Update postal codes when radius changes
+    document.getElementById('maxDistance').addEventListener('input', function() {
+        if (userCoordinates) {
+            const radiusKm = parseFloat(this.value) || 5;
+            const postalCodesInRadius = findPostalCodesWithinRadius(userCoordinates.lat, userCoordinates.lng, radiusKm);
+            displayPostalCodes(postalCodesInRadius);
+        }
+    });
     
     // Address search functionality
     addressSearchInput.addEventListener('input', function() {
@@ -25,10 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (query.length < 3) {
             hideSuggestions();
-            // Re-enable postal code if address is cleared
+            // Clear coordinates if address is cleared
             if (query.length === 0) {
-                postalCodeInput.disabled = false;
-                postalCodeInput.placeholder = 'e.g., M5H 2N2';
                 document.getElementById('selectedLat').value = '';
                 document.getElementById('selectedLng').value = '';
                 userCoordinates = null;
@@ -70,13 +84,9 @@ document.addEventListener('DOMContentLoaded', function() {
     useLocationCheckbox.addEventListener('change', function() {
         if (this.checked) {
             getCurrentLocation();
-            postalCodeInput.disabled = true;
-            postalCodeInput.placeholder = 'Using your location...';
             addressSearchInput.disabled = true;
             addressSearchInput.placeholder = 'Using your location...';
         } else {
-            postalCodeInput.disabled = false;
-            postalCodeInput.placeholder = 'e.g., M5H 2N2';
             addressSearchInput.disabled = false;
             addressSearchInput.placeholder = 'Enter an address in Toronto...';
             userCoordinates = null;
@@ -150,7 +160,7 @@ async function selectAddress(suggestion) {
     const addressSearchInput = document.getElementById('addressSearch');
     const selectedLatInput = document.getElementById('selectedLat');
     const selectedLngInput = document.getElementById('selectedLng');
-    const postalCodeInput = document.getElementById('postalCode');
+    const maxDistanceInput = document.getElementById('maxDistance');
     
     addressSearchInput.value = suggestion.address;
     hideSuggestions();
@@ -165,10 +175,10 @@ async function selectAddress(suggestion) {
             selectedLngInput.value = location.x;
             userCoordinates = { lat: location.y, lng: location.x };
             
-            // Clear postal code when address is selected
-            postalCodeInput.value = '';
-            postalCodeInput.disabled = true;
-            postalCodeInput.placeholder = 'Using selected address';
+            // Find and display postal codes within radius
+            const radiusKm = parseFloat(maxDistanceInput.value) || 5;
+            const postalCodesInRadius = findPostalCodesWithinRadius(location.y, location.x, radiusKm);
+            displayPostalCodes(postalCodesInRadius);
         }
     } catch (error) {
         console.error('Error geocoding address:', error);
@@ -180,59 +190,120 @@ async function handleSearch(e) {
     
     const formData = new FormData(e.target);
     const includeInactive = formData.get('includeInactive') ? 'on' : '';
-    let postalCode = formData.get('postalCode').replace(/\s/g, '+');
     const doctorType = formData.get('doctorType');
     const language = formData.get('language');
     const maxDistance = parseFloat(formData.get('maxDistance'));
     const selectedLat = formData.get('selectedLat');
     const selectedLng = formData.get('selectedLng');
     
-    // If coordinates are selected from address search, use them
+    // Check if coordinates are available from address search or current location
     if (selectedLat && selectedLng) {
         userCoordinates = { lat: parseFloat(selectedLat), lng: parseFloat(selectedLng) };
-        // Use a default postal code for the search API (Toronto city center)
-        if (!postalCode) {
-            postalCode = 'M5H+2N2';
-        }
+    }
+    
+    if (!userCoordinates) {
+        displayError('Please select an address or use your current location.');
+        return;
     }
     
     showLoading(true);
     
     try {
-        const searchParams = new URLSearchParams();
-        if (includeInactive) searchParams.append('cbx-includeinactive', includeInactive);
-        searchParams.append('postalCode', postalCode);
-        searchParams.append('doctorType', doctorType);
-        searchParams.append('LanguagesSelected', language);
+        // Find postal codes within radius
+        const postalCodesInRadius = findPostalCodesWithinRadius(userCoordinates.lat, userCoordinates.lng, maxDistance);
         
-        const response = await fetch('/api/search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: searchParams.toString()
-        });
+        console.log(`Searching for doctors in ${postalCodesInRadius.length} postal codes...`);
         
-        if (!response.ok) {
-            throw new Error('Search failed');
-        }
+        // Search for doctors in all postal codes
+        const allDoctorsResults = [];
         
-        const html = await response.text();
-        const doctors = parseSearchResults(html);
-        
-        if (userCoordinates || postalCode) {
-            const coords = userCoordinates || await getCoordinatesFromPostalCode(postalCode.replace('+', ' '));
-            if (coords) {
-                await enrichDoctorsWithDistance(doctors, coords, maxDistance);
+        // Process postal codes in batches to avoid overwhelming the server
+        for (const pc of postalCodesInRadius) {
+            try {
+                const searchParams = new URLSearchParams();
+                if (includeInactive) searchParams.append('cbx-includeinactive', includeInactive);
+                searchParams.append('postalCode', pc.code.replace(' ', '+'));
+                searchParams.append('doctorType', doctorType);
+                searchParams.append('LanguagesSelected', language);
+                
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: searchParams.toString()
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const doctors = parseSearchResults(html);
+                    
+                    // Add postal code info to each doctor
+                    doctors.forEach(doc => {
+                        doc.searchPostalCode = pc.code;
+                    });
+                    
+                    allDoctorsResults.push(...doctors);
+                }
+            } catch (error) {
+                console.error(`Error searching postal code ${pc.code}:`, error);
             }
         }
         
-        allDoctors = doctors;
-        displayResults(doctors);
+        console.log(`Found ${allDoctorsResults.length} doctors total`);
         
-        if (doctors.length > 0) {
+        // Calculate distances and filter - with caching, this is now safe
+        const doctorsWithDistance = [];
+        let geocodeCount = 0;
+        
+        for (const doctor of allDoctorsResults) {
+            const doctorCoords = await getCoordinatesFromAddress(doctor.address);
+            geocodeCount++;
+            
+            // Show progress every 10 doctors
+            if (geocodeCount % 10 === 0) {
+                console.log(`Processed ${geocodeCount}/${allDoctorsResults.length} doctors...`);
+            }
+            
+            if (doctorCoords) {
+                const distance = calculateDistance(
+                    userCoordinates.lat,
+                    userCoordinates.lng,
+                    doctorCoords.lat,
+                    doctorCoords.lng
+                );
+                
+                // Only include doctors within the actual radius
+                if (distance <= maxDistance) {
+                    doctor.coordinates = doctorCoords;
+                    doctor.distance = distance;
+                    doctorsWithDistance.push(doctor);
+                }
+            } else {
+                // If we can't geocode, include anyway but without distance
+                doctor.distance = null;
+                doctorsWithDistance.push(doctor);
+            }
+        }
+        
+        // Sort by distance (doctors without distance go to the end)
+        doctorsWithDistance.sort((a, b) => {
+            if (a.distance === null) return 1;
+            if (b.distance === null) return -1;
+            return a.distance - b.distance;
+        });
+        
+        console.log(`${doctorsWithDistance.length} doctors within ${maxDistance}km`);
+        
+        allDoctors = doctorsWithDistance;
+        displayResults(doctorsWithDistance);
+        
+        if (doctorsWithDistance.length > 0) {
             document.getElementById('filtersSection').style.display = 'block';
         }
+        
+        // Also display the postal codes that were searched
+        displayPostalCodes(postalCodesInRadius);
         
     } catch (error) {
         console.error('Search error:', error);
@@ -337,18 +408,24 @@ async function getCoordinatesFromPostalCode(postalCode) {
 }
 
 async function getCoordinatesFromAddress(address) {
+    // Check cache first
+    if (geocodeCache[address]) {
+        console.log('Using cached coordinates for:', address);
+        return geocodeCache[address];
+    }
+    
     try {
-        const response = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(address)}`);
+        // Use our server endpoint to avoid CORS issues
+        const response = await fetch(`/api/geocode-address?address=${encodeURIComponent(address)}`);
         const data = await response.json();
         
-        if (data && data.length > 0) {
-            return {
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon)
-            };
-        }
+        // Cache the result (including null results to avoid re-querying)
+        geocodeCache[address] = data;
+        
+        return data;
     } catch (error) {
         console.error('Geocoding error:', error);
+        geocodeCache[address] = null; // Cache the failure
     }
     return null;
 }
@@ -362,6 +439,12 @@ function getCurrentLocation() {
                     lng: position.coords.longitude
                 };
                 console.log('Location obtained:', userCoordinates);
+                
+                // Find and display postal codes within radius
+                const maxDistanceInput = document.getElementById('maxDistance');
+                const radiusKm = parseFloat(maxDistanceInput.value) || 5;
+                const postalCodesInRadius = findPostalCodesWithinRadius(userCoordinates.lat, userCoordinates.lng, radiusKm);
+                displayPostalCodes(postalCodesInRadius);
             },
             (error) => {
                 console.error('Geolocation error:', error);
@@ -454,6 +537,7 @@ function displayResults(doctors) {
                 <div>
                     <div class="doctor-name">${doctor.name}</div>
                     <div class="doctor-specialty">${doctor.specialty}</div>
+                    ${doctor.searchPostalCode ? `<div class="doctor-postal">${doctor.searchPostalCode}</div>` : ''}
                 </div>
                 ${doctor.distance !== null && doctor.distance !== undefined ? 
                     `<div class="distance-badge">${doctor.distance} km</div>` : ''}
@@ -503,3 +587,126 @@ function showLoading(show) {
         spinner.style.display = 'none';
     }
 }
+
+async function loadTorontoPostalCodes() {
+    try {
+        const response = await fetch('/toronto-postal-codes.json');
+        const data = await response.json();
+        torontoPostalCodes = data.postalCodes;
+    } catch (error) {
+        console.error('Error loading postal codes:', error);
+    }
+}
+
+async function loadFSABoundaries() {
+    try {
+        const response = await fetch('/toronto-fsa-boundaries.min.json');
+        const data = await response.json();
+        fsaBoundaries = data;
+    } catch (error) {
+        console.error('Error loading FSA boundaries:', error);
+    }
+}
+
+function findPostalCodesWithinRadius(centerLat, centerLng, radiusKm) {
+    console.log('Finding postal codes within radius:', { centerLat, centerLng, radiusKm });
+    console.log('FSA boundaries loaded?', fsaBoundaries ? 'Yes' : 'No');
+    console.log('Toronto postal codes loaded?', torontoPostalCodes.length > 0 ? `Yes (${torontoPostalCodes.length} codes)` : 'No');
+    
+    if (!fsaBoundaries) {
+        console.log('Using fallback center point method - FSA boundaries not loaded');
+        // Fallback to center point method if boundaries not loaded
+        const postalCodesInRadius = [];
+        
+        for (const postalCode of torontoPostalCodes) {
+            const distance = calculateDistance(centerLat, centerLng, postalCode.lat, postalCode.lng);
+            if (distance <= radiusKm) {
+                postalCodesInRadius.push({
+                    code: postalCode.code,
+                    distance: Math.round(distance * 10) / 10
+                });
+            }
+        }
+        
+        postalCodesInRadius.sort((a, b) => a.distance - b.distance);
+        console.log(`Found ${postalCodesInRadius.length} postal codes using center point method`);
+        return postalCodesInRadius;
+    }
+    
+    // Use Turf.js to check FSA boundary intersections
+    const searchPoint = turf.point([centerLng, centerLat]);
+    const searchCircle = turf.circle(searchPoint, radiusKm, { units: 'kilometers' });
+    
+    console.log('Search point:', [centerLng, centerLat]);
+    console.log('Search circle created with radius:', radiusKm, 'km');
+    console.log('Number of FSA features:', fsaBoundaries.features.length);
+    
+    // Check first few FSAs for debugging
+    if (fsaBoundaries.features.length > 0) {
+        console.log('Sample FSA:', fsaBoundaries.features[0].properties.fsa);
+        console.log('Sample FSA geometry type:', fsaBoundaries.features[0].geometry.type);
+    }
+    
+    const fsasInRadius = new Set();
+    const postalCodesInRadius = [];
+    
+    // First, find all FSAs that intersect with the search radius
+    for (const feature of fsaBoundaries.features) {
+        // Check if the search circle intersects with the FSA boundary
+        try {
+            const intersects = turf.booleanIntersects(searchCircle, feature);
+            
+            if (intersects) {
+                console.log('FSA intersects:', feature.properties.fsa);
+                fsasInRadius.add(feature.properties.fsa);
+            }
+            
+            // For debugging: check distance to closest FSAs
+            if (feature.properties.fsa && (feature.properties.fsa === 'M2M' || feature.properties.fsa === 'M2N' || feature.properties.fsa === 'M2R')) {
+                const centroid = turf.centroid(feature);
+                const distance = turf.distance(searchPoint, centroid, { units: 'kilometers' });
+                console.log(`Distance to ${feature.properties.fsa}: ${distance.toFixed(2)} km`);
+            }
+        } catch (error) {
+            console.error('Error checking intersection for FSA:', feature.properties.fsa, error);
+        }
+    }
+    
+    console.log('FSAs found within radius:', Array.from(fsasInRadius));
+    
+    // Now include all postal codes that belong to these FSAs
+    for (const postalCode of torontoPostalCodes) {
+        // Get the FSA (first 3 characters) from the postal code
+        const fsa = postalCode.code.substring(0, 3);
+        
+        if (fsasInRadius.has(fsa)) {
+            const distance = calculateDistance(centerLat, centerLng, postalCode.lat, postalCode.lng);
+            postalCodesInRadius.push({
+                code: postalCode.code,
+                distance: Math.round(distance * 10) / 10
+            });
+        }
+    }
+    
+    // Sort by distance to center
+    postalCodesInRadius.sort((a, b) => a.distance - b.distance);
+    
+    console.log(`Final result: ${postalCodesInRadius.length} postal codes found`);
+    
+    return postalCodesInRadius;
+}
+
+function displayPostalCodes(postalCodes) {
+    const postalCodesSection = document.getElementById('postalCodesSection');
+    const postalCodesList = document.getElementById('postalCodesList');
+    
+    if (postalCodes.length > 0) {
+        postalCodesSection.style.display = 'block';
+        postalCodesList.innerHTML = postalCodes.map(pc => 
+            `<span class="postal-code-item">${pc.code} (${pc.distance}km)</span>`
+        ).join(' ');
+    } else {
+        postalCodesSection.style.display = 'none';
+    }
+}
+

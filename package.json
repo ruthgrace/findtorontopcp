@@ -8,7 +8,11 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "@turf/projection": "^7.2.0",
+    "@turf/turf": "^7.2.0",
     "express": "^4.21.2",
-    "node-fetch": "^2.6.9"
+    "node-fetch": "^2.6.9",
+    "proj4": "^2.19.10",
+    "shapefile": "^0.6.6"
   }
 }

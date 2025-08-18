@@ -18,16 +18,11 @@
                 <div class="form-group">
                     <label for="addressSearch">Address</label>
                     <div class="address-search-container">
-                        <input type="text" id="addressSearch" name="addressSearch" placeholder="Enter an address in Toronto..." autocomplete="off">
+                        <input type="text" id="addressSearch" name="addressSearch" placeholder="Enter an address in Toronto..." autocomplete="off" required>
                         <div id="addressSuggestions" class="address-suggestions"></div>
                     </div>
                     <input type="hidden" id="selectedLat" name="selectedLat">
                     <input type="hidden" id="selectedLng" name="selectedLng">
-                </div>
-                
-                <div class="form-group">
-                    <label for="postalCode">Or enter Postal Code</label>
-                    <input type="text" id="postalCode" name="postalCode" placeholder="e.g., M5H 2N2">
                 </div>
 
                 <div class="form-group">
@@ -41,7 +36,7 @@
 
                 <div class="form-group">
                     <label for="maxDistance">Maximum Distance (km)</label>
-                    <input type="number" id="maxDistance" name="maxDistance" placeholder="10" value="10" min="1" max="100">
+                    <input type="number" id="maxDistance" name="maxDistance" placeholder="5" value="5" min="1" max="100">
                 </div>
 
                 <div class="form-group">
@@ -86,6 +81,11 @@
             </form>
         </section>
 
+        <section class="postal-codes-section" id="postalCodesSection" style="display: none;">
+            <h3>Postal Codes Within Radius:</h3>
+            <div id="postalCodesList" class="postal-codes-list"></div>
+        </section>
+
         <section class="filters-section" id="filtersSection" style="display: none;">
             <h3>Sort By:</h3>
             <div class="sort-buttons">
@@ -103,6 +103,7 @@
         </section>
     </div>
 
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
