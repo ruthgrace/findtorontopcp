@@ -235,15 +235,29 @@ async function handleSearch(e) {
                 });
                 
                 if (response.ok) {
-                    const html = await response.text();
-                    const doctors = parseSearchResults(html);
+                    const responseText = await response.text();
+                    let doctors = [];
                     
-                    // Add postal code info to each doctor
-                    doctors.forEach(doc => {
-                        doc.searchPostalCode = pc.code;
-                    });
+                    // Check if response is JSON or HTML
+                    if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
+                        // It's JSON
+                        const data = JSON.parse(responseText);
+                        doctors = parseJSONResults(data);
+                    } else {
+                        // It's HTML
+                        doctors = parseSearchResults(responseText);
+                    }
                     
-                    allDoctorsResults.push(...doctors);
+                    if (doctors.length > 0) {
+                        // Add postal code info to each doctor
+                        doctors.forEach(doc => {
+                            doc.searchPostalCode = pc.code;
+                        });
+                        
+                        allDoctorsResults.push(...doctors);
+                    } else {
+                        console.warn(`No doctors found for postal code ${pc.code}`);
+                    }
                 }
             } catch (error) {
                 console.error(`Error searching postal code ${pc.code}:`, error);
@@ -251,6 +265,12 @@ async function handleSearch(e) {
         }
         
         console.log(`Found ${allDoctorsResults.length} doctors total`);
+        
+        if (allDoctorsResults.length === 0) {
+            displayError('No doctors found in the selected postal codes. The CPSO API may have changed or there may be no doctors in this area.');
+            showLoading(false);
+            return;
+        }
         
         // Calculate distances and filter - with caching, this is now safe
         const doctorsWithDistance = [];
@@ -276,7 +296,7 @@ async function handleSearch(e) {
                 // Only include doctors within the actual radius
                 if (distance <= maxDistance) {
                     doctor.coordinates = doctorCoords;
-                    doctor.distance = distance;
+                    doctor.distance = Math.round(distance * 10) / 10; // Round to 1 decimal place
                     doctorsWithDistance.push(doctor);
                 }
             } else {
@@ -294,6 +314,15 @@ async function handleSearch(e) {
         });
         
         console.log(`${doctorsWithDistance.length} doctors within ${maxDistance}km`);
+        
+        // Debug: Log first few doctors with distances
+        console.log('First 3 doctors with distances:', 
+            doctorsWithDistance.slice(0, 3).map(d => ({
+                name: d.name,
+                distance: d.distance,
+                address: d.address
+            }))
+        );
         
         allDoctors = doctorsWithDistance;
         displayResults(doctorsWithDistance);
@@ -313,12 +342,48 @@ async function handleSearch(e) {
     }
 }
 
+function parseJSONResults(data) {
+    const doctors = [];
+    
+    console.log('Parsing JSON response, total count:', data.totalcount);
+    
+    if (data.results && Array.isArray(data.results)) {
+        data.results.forEach(result => {
+            const doctor = {
+                name: result.name || 'Unknown',
+                specialty: result.specialties || 'General Practice',
+                address: [
+                    result.street1,
+                    result.street2,
+                    result.city,
+                    result.province,
+                    result.postalcode
+                ].filter(Boolean).join(', '),
+                phone: result.phone || '',
+                languages: result.languages || 'English',
+                status: result.status || 'Active',
+                cpsoNumber: result.cpsonumber || ''
+            };
+            
+            if (doctor.address && doctor.address.length > 5) {
+                doctors.push(doctor);
+            }
+        });
+    }
+    
+    console.log(`Parsed ${doctors.length} doctors from JSON`);
+    return doctors;
+}
+
 function parseSearchResults(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const doctors = [];
     
+    console.log('Parsing HTML response, length:', html.length);
+    
     const doctorElements = doc.querySelectorAll('.doctor-result');
+    console.log('Found doctor elements:', doctorElements.length);
     
     doctorElements.forEach(elem => {
         const doctor = {
@@ -337,54 +402,8 @@ function parseSearchResults(html) {
     });
     
     if (doctors.length === 0) {
-        const mockDoctors = [
-            {
-                name: 'Dr. Sarah Johnson',
-                specialty: 'Family Medicine',
-                address: '123 Queen St W, Toronto, ON M5H 2M9',
-                phone: '(416) 555-0101',
-                languages: 'English, French',
-                status: 'Active',
-                cpsoNumber: '12345'
-            },
-            {
-                name: 'Dr. Michael Chen',
-                specialty: 'General Practice',
-                address: '456 Yonge St, Toronto, ON M4Y 2A6',
-                phone: '(416) 555-0102',
-                languages: 'English, Mandarin',
-                status: 'Active',
-                cpsoNumber: '12346'
-            },
-            {
-                name: 'Dr. Maria Rodriguez',
-                specialty: 'Family Medicine',
-                address: '789 Bloor St W, Toronto, ON M6G 1L3',
-                phone: '(416) 555-0103',
-                languages: 'English, Spanish',
-                status: 'Active',
-                cpsoNumber: '12347'
-            },
-            {
-                name: 'Dr. Ahmed Hassan',
-                specialty: 'General Practice',
-                address: '321 Dundas St W, Toronto, ON M5T 1G4',
-                phone: '(416) 555-0104',
-                languages: 'English, Arabic',
-                status: 'Active',
-                cpsoNumber: '12348'
-            },
-            {
-                name: 'Dr. Jennifer Park',
-                specialty: 'Family Medicine',
-                address: '654 King St E, Toronto, ON M5A 1M5',
-                phone: '(416) 555-0105',
-                languages: 'English, Korean',
-                status: 'Active',
-                cpsoNumber: '12349'
-            }
-        ];
-        return mockDoctors;
+        console.error('No doctors found in CPSO response. HTML may have changed format.');
+        console.log('First 500 chars of response:', html.substring(0, 500));
     }
     
     return doctors;

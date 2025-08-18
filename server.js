@@ -162,11 +162,13 @@ app.get('/api/geocode-address', async (req, res) => {
         }
         
         // Check cache first
-        if (geocodeCache[address]) {
-            console.log('Cache hit for:', address);
+        if (geocodeCache.hasOwnProperty(address)) {
+            console.log('Cache hit for:', address, '- Result:', geocodeCache[address]);
             res.json(geocodeCache[address]);
             return;
         }
+        
+        console.log('Cache miss for:', address);
         
         // First try to get suggestions from Toronto geocoder
         const suggestUrl = `https://map.toronto.ca/cotgeocoder/rest/geocoder/suggest?f=json&addressOnly=0&retRowLimit=1&searchString=${encodeURIComponent(address)}`;
