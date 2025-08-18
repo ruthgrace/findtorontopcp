@@ -331,8 +331,8 @@ async function handleSearch(e) {
             document.getElementById('filtersSection').style.display = 'block';
         }
         
-        // Also display the postal codes that were searched
-        displayPostalCodes(postalCodesInRadius);
+        // Don't display postal codes anymore since we have the actual doctors
+        // displayPostalCodes(postalCodesInRadius);
         
     } catch (error) {
         console.error('Search error:', error);
