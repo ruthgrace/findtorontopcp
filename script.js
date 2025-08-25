@@ -1,5 +1,6 @@
 let allDoctors = [];
 let userCoordinates = null;
+let lastSearchCoordinates = null; // Track last search location
 let addressSearchTimeout = null;
 let selectedSuggestionIndex = -1;
 let torontoPostalCodes = [];
@@ -205,6 +206,19 @@ async function handleSearch(e) {
         displayError('Please select an address or use your current location.');
         return;
     }
+    
+    // Check if searching from a different location than last time
+    if (lastSearchCoordinates && 
+        (lastSearchCoordinates.lat !== userCoordinates.lat || 
+         lastSearchCoordinates.lng !== userCoordinates.lng)) {
+        console.log('Different address detected, clearing previous results');
+        // Clear previous results
+        allDoctors = [];
+        displayResults([]);
+    }
+    
+    // Store current search coordinates
+    lastSearchCoordinates = { lat: userCoordinates.lat, lng: userCoordinates.lng };
     
     showLoading(true);
     
