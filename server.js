@@ -3,54 +3,35 @@ const path = require('path');
 const fetch = require('node-fetch');
 const fs = require('fs');
 require('dotenv').config();
+const db = require('./database');
+const { GOOGLE_MAPS_API_KEY } = require('./constants');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// Load geocode cache
-const CACHE_FILE = path.join(__dirname, 'geocode-cache.json');
+// Initialize database and load geocode cache
 let geocodeCache = {};
-try {
-    if (fs.existsSync(CACHE_FILE)) {
-        geocodeCache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
-        console.log(`Loaded ${Object.keys(geocodeCache).length} cached geocode entries`);
-    }
-} catch (error) {
-    console.error('Error loading geocode cache:', error);
-}
+let dbInitialized = false;
 
-// Save cache with atomic write to prevent corruption
-function saveCache() {
+// Initialize database on startup
+(async () => {
     try {
-        const tempFile = CACHE_FILE + '.tmp.' + Date.now(); // Unique temp file
-        fs.writeFileSync(tempFile, JSON.stringify(geocodeCache, null, 2));
-        fs.renameSync(tempFile, CACHE_FILE); // Atomic operation
-        console.log(`Saved ${Object.keys(geocodeCache).length} geocode entries to cache`);
+        await db.initDatabase();
+        dbInitialized = true;
+        
+        // Load all existing geocoding into memory cache for fast access
+        geocodeCache = await db.getAllGeocodedAddresses();
+        console.log(`Loaded ${Object.keys(geocodeCache).length} geocoded addresses from database`);
+        
+        // Get and display database stats
+        const stats = await db.getDatabaseStats();
+        console.log('Database statistics:', stats);
     } catch (error) {
-        console.error('Error saving geocode cache:', error);
-        // Try to clean up temp file if it exists
-        try {
-            if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-            }
-        } catch (cleanupError) {
-            // Ignore cleanup errors
-        }
+        console.error('Failed to initialize database:', error);
+        // Fall back to in-memory cache only
+        geocodeCache = {};
     }
-}
-
-// Batch save instead of saving after every request
-let saveTimer = null;
-function scheduleSave() {
-    if (saveTimer) {
-        clearTimeout(saveTimer);
-    }
-    // Save after 5 seconds of no new geocoding
-    saveTimer = setTimeout(() => {
-        saveCache();
-        saveTimer = null;
-    }, 5000);
-}
+})();
 
 app.use(express.static(path.join(__dirname)));
 app.use(express.urlencoded({ extended: true }));
@@ -155,8 +136,44 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
-// Geoapify API key - set this in environment variable GEOAPIFY_API_KEY
-const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY || '';
+// New endpoint to save doctor data to database
+app.post('/api/save-doctors', async (req, res) => {
+    try {
+        const doctors = req.body.doctors;
+        
+        if (!doctors || !Array.isArray(doctors)) {
+            return res.status(400).json({ error: 'doctors array is required' });
+        }
+        
+        if (!dbInitialized) {
+            return res.status(503).json({ error: 'Database not initialized' });
+        }
+        
+        await db.saveDoctorsBatch(doctors);
+        
+        res.json({ success: true, count: doctors.length });
+    } catch (error) {
+        console.error('Error saving doctors:', error);
+        res.status(500).json({ error: 'Failed to save doctors' });
+    }
+});
+
+// New endpoint to get database statistics
+app.get('/api/stats', async (req, res) => {
+    try {
+        if (!dbInitialized) {
+            return res.status(503).json({ error: 'Database not initialized' });
+        }
+        
+        const stats = await db.getDatabaseStats();
+        res.json(stats);
+    } catch (error) {
+        console.error('Error getting stats:', error);
+        res.status(500).json({ error: 'Failed to get statistics' });
+    }
+});
+
+// Google Maps API key is loaded from constants.js
 
 app.get('/api/geocode-address', async (req, res) => {
     try {
@@ -166,40 +183,62 @@ app.get('/api/geocode-address', async (req, res) => {
             return res.status(400).json({ error: 'address parameter is required' });
         }
         
-        // Check cache first
+        // Check in-memory cache first
         if (geocodeCache.hasOwnProperty(address)) {
             console.log('Cache hit for:', address, '- Result:', geocodeCache[address]);
             res.json(geocodeCache[address]);
             return;
         }
         
+        // Check database if not in memory cache
+        if (dbInitialized) {
+            const dbCoords = await db.getGeocoding(address);
+            if (dbCoords) {
+                console.log('Database hit for:', address, '- Result:', dbCoords);
+                geocodeCache[address] = dbCoords; // Add to memory cache
+                res.json(dbCoords);
+                return;
+            }
+        }
+        
         console.log('Cache miss for:', address);
         
-        // If we have Geoapify API key, use it for single geocoding
-        if (GEOAPIFY_API_KEY) {
-            const geoapifyUrl = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(address)}&filter=countrycode:ca&apiKey=${GEOAPIFY_API_KEY}`;
+        // Use Google Maps Geocoding API
+        if (GOOGLE_MAPS_API_KEY) {
+            const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=ca&key=${GOOGLE_MAPS_API_KEY}`;
             
-            console.log('Using Geoapify geocoder for:', address);
+            console.log('Using Google Maps geocoder for:', address);
             
-            const geoapifyResponse = await fetch(geoapifyUrl);
+            const googleResponse = await fetch(googleUrl);
             
-            if (geoapifyResponse.ok) {
-                const geoapifyData = await geoapifyResponse.json();
+            if (googleResponse.ok) {
+                const googleData = await googleResponse.json();
                 
-                if (geoapifyData.features && geoapifyData.features.length > 0) {
+                if (googleData.status === 'OK' && googleData.results && googleData.results.length > 0) {
+                    const location = googleData.results[0].geometry.location;
                     const coords = {
-                        lat: geoapifyData.features[0].geometry.coordinates[1],
-                        lng: geoapifyData.features[0].geometry.coordinates[0]
+                        lat: location.lat,
+                        lng: location.lng
                     };
                     
-                    console.log('Got coordinates from Geoapify:', coords);
+                    console.log('Got coordinates from Google Maps:', coords);
                     
-                    // Cache the result
+                    // Cache the result in memory and database
                     geocodeCache[address] = coords;
-                    scheduleSave();
+                    if (dbInitialized) {
+                        db.saveGeocoding(address, coords.lat, coords.lng, 'google').catch(err => {
+                            console.error('Error saving to database:', err);
+                        });
+                    }
                     
                     res.json(coords);
                     return;
+                } else if (googleData.status === 'ZERO_RESULTS') {
+                    console.log('Google Maps returned no results for:', address);
+                } else if (googleData.status === 'OVER_QUERY_LIMIT') {
+                    console.error('Google Maps API quota exceeded');
+                } else {
+                    console.log('Google Maps API status:', googleData.status);
                 }
             }
         }
@@ -232,9 +271,13 @@ app.get('/api/geocode-address', async (req, res) => {
                 
                 console.log('Got coordinates from OpenStreetMap:', coords);
                 
-                // Cache the result
+                // Cache the result in memory and database
                 geocodeCache[address] = coords;
-                scheduleSave();
+                if (dbInitialized) {
+                    db.saveGeocoding(address, coords.lat, coords.lng, 'openstreetmap').catch(err => {
+                        console.error('Error saving to database:', err);
+                    });
+                }
                 
                 res.json(coords);
                 return;
@@ -255,7 +298,7 @@ app.get('/api/geocode-address', async (req, res) => {
     }
 });
 
-// Batch geocode endpoint using Geoapify
+// Batch geocode endpoint using Google Maps
 app.post('/api/batch-geocode', async (req, res) => {
     try {
         const addresses = req.body.addresses;
@@ -264,8 +307,8 @@ app.post('/api/batch-geocode', async (req, res) => {
             return res.status(400).json({ error: 'addresses array is required' });
         }
         
-        if (!GEOAPIFY_API_KEY) {
-            return res.status(500).json({ error: 'Geoapify API key not configured' });
+        if (!GOOGLE_MAPS_API_KEY) {
+            return res.status(500).json({ error: 'Google Maps API key not configured' });
         }
         
         console.log(`Starting batch geocoding for ${addresses.length} addresses`);
@@ -284,24 +327,23 @@ app.post('/api/batch-geocode', async (req, res) => {
         
         console.log(`Need to geocode ${uncachedAddresses.length} uncached addresses`);
         
-        // Geoapify batch accepts up to 1000 addresses at once
-        const BATCH_SIZE = 1000; // Geoapify's max batch size
-        const batches = [];
-        for (let i = 0; i < uncachedAddresses.length; i += BATCH_SIZE) {
-            batches.push(uncachedAddresses.slice(i, i + BATCH_SIZE));
-        }
+        // Google Maps doesn't have batch geocoding, so we'll process with rate limiting
+        // Google Maps API allows 50 requests per second
+        const BATCH_SIZE = 10; // Process 10 at a time in parallel
+        const DELAY_MS = 200; // 200ms between batches = 50 requests/second max
         
-        console.log(`Processing ${uncachedAddresses.length} addresses in ${batches.length} batch(es)`);
+        console.log(`Processing ${uncachedAddresses.length} addresses using Google Maps API`);
         
         const allResults = {};
         
-        for (const batch of batches) {
-            console.log('Sample addresses from this batch:', batch.slice(0, 3));
+        for (let i = 0; i < uncachedAddresses.length; i += BATCH_SIZE) {
+            const batch = uncachedAddresses.slice(i, i + BATCH_SIZE);
+            console.log(`Processing batch: ${i}-${Math.min(i + BATCH_SIZE, uncachedAddresses.length)} of ${uncachedAddresses.length}`);
             
-            // Clean addresses before sending to Geoapify
-            const cleanedAddresses = batch.map(addr => {
+            // Process batch in parallel using Google Maps API
+            const batchPromises = batch.map(async (address) => {
                 // Clean up address for better geocoding
-                let cleanAddr = addr;
+                let cleanAddr = address;
                 
                 // Remove hospital/building names (text before first comma if it's not a suite/unit)
                 cleanAddr = cleanAddr.replace(/^[^,0-9]+(Hospital|Centre|Center|Clinic|Medical)[^,]*,\s*/i, '');
@@ -323,93 +365,56 @@ app.post('/api/batch-geocode', async (req, res) => {
                     cleanAddr = cleanAddr + ', Canada';
                 }
                 
-                console.log(`Cleaned: "${addr}" -> "${cleanAddr}"`);
-                return cleanAddr;
-            });
-            
-            // Submit batch job
-            const jobResponse = await fetch(`https://api.geoapify.com/v1/batch/geocode/search?apiKey=${GEOAPIFY_API_KEY}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(cleanedAddresses)
-            });
-            
-            if (!jobResponse.ok) {
-                console.error('Failed to submit batch job:', jobResponse.status);
-                continue;
-            }
-            
-            const jobData = await jobResponse.json();
-            const jobId = jobData.id;
-            const jobUrl = jobData.url;
-            
-            console.log('Batch job submitted, ID:', jobId);
-            console.log(`Processing batch of ${batch.length} addresses`);
-            
-            // Poll for job completion
-            let jobComplete = false;
-            let attempts = 0;
-            const maxAttempts = 60; // Max 1 minute of polling
-            
-            while (!jobComplete && attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                console.log(`Geocoding: "${address}" (as: "${cleanAddr}")`);
                 
-                const statusResponse = await fetch(jobUrl);
-                if (statusResponse.ok) {
-                    const statusData = await statusResponse.json();
+                try {
+                    const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cleanAddr)}&region=ca&key=${GOOGLE_MAPS_API_KEY}`;
                     
-                    if (statusData.status === 'completed') {
-                        jobComplete = true;
+                    const response = await fetch(googleUrl);
+                    if (response.ok) {
+                        const data = await response.json();
                         
-                        // Get results
-                        const resultsResponse = await fetch(`https://api.geoapify.com/v1/batch/geocode/search?id=${jobId}&apiKey=${GEOAPIFY_API_KEY}`);
-                        
-                        if (resultsResponse.ok) {
-                            const resultsData = await resultsResponse.json();
+                        if (data.status === 'OK' && data.results && data.results.length > 0) {
+                            const location = data.results[0].geometry.location;
+                            const coords = {
+                                lat: location.lat,
+                                lng: location.lng
+                            };
                             
-                            console.log(`Got ${resultsData.length} results from Geoapify for batch of ${batch.length} addresses`);
+                            geocodeCache[address] = coords;
+                            allResults[address] = coords;
                             
-                            if (resultsData.length !== batch.length) {
-                                console.log(`WARNING: Geoapify returned ${resultsData.length} results but we sent ${batch.length} addresses!`);
+                            // Save to database
+                            if (dbInitialized) {
+                                db.saveGeocoding(address, coords.lat, coords.lng, 'google-batch').catch(err => {
+                                    console.error('Error saving to database:', err);
+                                });
                             }
                             
-                            // Process results
-                            resultsData.forEach((result, index) => {
-                                const originalAddress = batch[index]; // Use original address as key
-                                
-                                if (result && result.features && result.features.length > 0) {
-                                    const coords = {
-                                        lat: result.features[0].geometry.coordinates[1],
-                                        lng: result.features[0].geometry.coordinates[0]
-                                    };
-                                    
-                                    geocodeCache[originalAddress] = coords;
-                                    allResults[originalAddress] = coords;
-                                    console.log(`Geocoded: ${originalAddress} -> ${coords.lat}, ${coords.lng}`);
-                                } else {
-                                    // Don't cache null results
-                                    allResults[originalAddress] = null;
-                                    const cleanedAddr = cleanedAddresses[index];
-                                    console.log(`Failed to geocode: "${originalAddress}" (sent as: "${cleanedAddr}")`);
-                                    if (result) {
-                                        console.log(`  Geoapify returned:`, JSON.stringify(result).substring(0, 200));
-                                    }
-                                }
-                            });
+                            console.log(`Geocoded: ${address} -> ${coords.lat}, ${coords.lng}`);
+                        } else {
+                            allResults[address] = null;
+                            console.log(`Failed to geocode: "${address}" - Status: ${data.status}`);
+                            if (data.error_message) {
+                                console.log(`  Error: ${data.error_message}`);
+                            }
                         }
-                    } else if (statusData.status === 'failed') {
-                        console.error('Batch job failed');
-                        break;
+                    } else {
+                        allResults[address] = null;
+                        console.log(`HTTP error geocoding: "${address}" - Status: ${response.status}`);
                     }
+                } catch (error) {
+                    console.error(`Error geocoding ${address}:`, error);
+                    allResults[address] = null;
                 }
-                
-                attempts++;
-            }
+            });
             
-            if (!jobComplete) {
-                console.error('Batch job timed out');
+            // Wait for all addresses in this batch to complete
+            await Promise.all(batchPromises);
+            
+            // Rate limiting delay between batches
+            if (i + BATCH_SIZE < uncachedAddresses.length) {
+                await new Promise(resolve => setTimeout(resolve, DELAY_MS));
             }
         }
         
@@ -420,8 +425,21 @@ app.post('/api/batch-geocode', async (req, res) => {
             }
         });
         
-        // Save cache
-        scheduleSave();
+        // Save all successful geocoding results to database in batch
+        if (dbInitialized) {
+            const toSave = {};
+            for (const [addr, coords] of Object.entries(allResults)) {
+                if (coords && coords.lat && coords.lng) {
+                    toSave[addr] = coords;
+                }
+            }
+            
+            if (Object.keys(toSave).length > 0) {
+                db.saveGeocodingBatch(toSave).catch(err => {
+                    console.error('Error batch saving to database:', err);
+                });
+            }
+        }
         
         const successCount = Object.keys(allResults).filter(k => allResults[k] !== null).length;
         const failCount = Object.keys(allResults).filter(k => allResults[k] === null).length;
@@ -445,24 +463,26 @@ const server = app.listen(PORT, () => {
 });
 
 // Save cache on graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
     console.log('\nShutting down server...');
-    if (saveTimer) {
-        clearTimeout(saveTimer);
+    
+    if (dbInitialized) {
+        await db.closeDatabase();
     }
-    saveCache();
+    
     server.close(() => {
         console.log('Server closed');
         process.exit(0);
     });
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
     console.log('\nShutting down server...');
-    if (saveTimer) {
-        clearTimeout(saveTimer);
+    
+    if (dbInitialized) {
+        await db.closeDatabase();
     }
-    saveCache();
+    
     server.close(() => {
         console.log('Server closed');
         process.exit(0);

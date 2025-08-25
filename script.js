@@ -292,6 +292,11 @@ async function handleSearch(e) {
         allDoctors = doctorsWithDistance;
         displayResults(doctorsWithDistance);
         
+        // Optionally save doctors to database (async, don't wait)
+        if (doctorsWithDistance.length > 0) {
+            saveDoctorsToDatabase(doctorsWithDistance);
+        }
+        
         if (doctorsWithDistance.length > 0) {
             document.getElementById('filtersSection').style.display = 'block';
         }
@@ -756,6 +761,12 @@ function displayPostalCodes(postalCodes) {
     const postalCodesSection = document.getElementById('postalCodesSection');
     const postalCodesList = document.getElementById('postalCodesList');
     
+    // Check if elements exist before trying to use them
+    if (!postalCodesSection || !postalCodesList) {
+        console.log('Postal codes display elements not found in HTML');
+        return;
+    }
+    
     if (postalCodes.length > 0) {
         postalCodesSection.style.display = 'block';
         postalCodesList.innerHTML = postalCodes.map(pc => 
@@ -851,5 +862,40 @@ async function checkBatchGeocoding() {
             document.getElementById('batchGeocodeSection').style.display = 'block';
         }
     }
+}
+
+// Save doctors to database
+async function saveDoctorsToDatabase(doctors) {
+    try {
+        const response = await fetch('/api/save-doctors', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ doctors })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`Saved ${data.count} doctors to database`);
+        }
+    } catch (error) {
+        console.error('Error saving doctors to database:', error);
+    }
+}
+
+// Get database statistics
+async function getDatabaseStats() {
+    try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            console.log('Database statistics:', stats);
+            return stats;
+        }
+    } catch (error) {
+        console.error('Error getting database stats:', error);
+    }
+    return null;
 }
 
