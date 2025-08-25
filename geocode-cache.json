@@ -1,265 +1,1226 @@
 {
-  "6023 Yonge St, North York, ON, M2M 3W2": null,
-  "306-250 Harding Blvd, Richmond Hill, ON, L4C 9M7": null,
-  "20 Drewry Avenue, Toronto, Ontario, M2M 1C8     ": null,
-  "622 Bloor St W, Bloor Kids, Toronto, ON, M6G 1K7": null,
-  "2330 Kennedy Road, Suite 210, Scarborough, Ontario, M1T 0A2     ": null,
-  "301-491 Eglinton Ave W, Kindercare Pediatrics, Toronto, ON, M5N 1A8": null,
-  "43 Wellesley St E, Toronto, ON, M4Y 1H1": null,
-  "The Scarborough Hospital, Birchmount Division, Scarborough, Ontario                       , M1W 3W3     ": null,
-  "Scarborough General Hospital, Department of Anesthesia, Scarborough, Ontario                       , M1P 2V5     ": null,
-  "Suite 300, 5734 Yonge Street, Toronto, Ontario, M2M 4E7     ": null,
-  "St. John's Rehab, 285 Cummer Ave, Toronto, Ontario, M2M 2G1     ": null,
-  "30 The Queensway, St Joseph's Health Center, Toronto, ON, M6R 1B5": null,
-  "Suite 301, 3292 Bayview Ave, North York, ON, M2M 4J5": null,
-  "Unit 304, 372 Hollandview Trail, Aurora, Ontario                       , L4G 0A5     ": null,
-  "Suite 300, 3292 Bayview Avenue, Toronto, Ontario, M2M 4J5     ": null,
-  "Sunnybrook Health Sciences Centre, FG-29 Department of Psychiatry, Toronto, Ontario, M4N 3M5     ": null,
-  "700 Gordon St, Whitby, ON, L1N 5S9": null,
-  "Suite 105, 3292 Bayview Avenue, Toronto, Ontario, M2M 4J5     ": null,
-  "Scarborough General Hospital, 3050 Lawrence Avenue East, Scarborough, Ontario, M1P 2V5     ": null,
-  "Dynamic Medical Centre, 5734 Yonge Street, Toronto, Ontario, M2M 4E7     ": null,
-  "200-400 Bradwick Dr, Concord, ON, L4K 5V9": null,
-  "Suite 202, 3292 Bayview Avenue, Willowdale, Ontario, M2M 4J5     ": null,
-  "5925 Yonge Street, North York, Ontario, M2M 3V7     ": null,
-  "285 Cummer Ave, st John's Rehab, North York, ON, M2M 2G1": null,
-  "Sunnybrook Health Sciences Centre, St. John's Rehab, North York, Ontario, M2M 2G1     ": null,
-  "GreeneStone Clinic Toronto, 5734 Yonge Street, Toronto, Ontario, M2M4E7      ": null,
-  "Trillium Health Partners, 150 Sherway Drive, Etobicoke, Ontario, M9C 1A6     ": null,
-  "8 Malabar Place, North York, Ontario                       , M3B 1A5     ": null,
-  "Parkdale Queen West CHC, Queen West Site, Toronto, Ontario, M4P 2H4     ": null,
-  "3292 Bayview Ave, Suite 301, North York, ON, M2M 4J5": null,
-  "Cummer Lodge, Long Term Care Home, 205 Cummer Ave, North York, Ontario, M2M 2E8     ": null,
-  "285 Cummer Avenue, Toronto, Ontario, M2M 2G1     ": null,
-  "207 - 10 Cottrelle Blvd, Brampton, Ontario, L6S 0E2     ": null,
-  "5734 Yonge St, Dynamic Medical Center, North York, ON, M2M 4E7": null,
-  "3292 Bayview Avenue Suite 306, North York, ON, Toronto, Ontario, M2M 4J5     ": null,
-  "Brampton Civic Hospital, 2100 Bovaird Drive E., Brampton, Ontario, L6R 3J7     ": null,
-  "Windsor Regional Hospital, Metropolitan Campus, Windsor, Ontario, N8W 1L9     ": null,
-  "306 - 3292 Bayview Ave, North York, ON, M2M 4J5": null,
-  "Center Point Medical Centre, 225 - 6228 Yonge St, North York, Ontario, M2M 3X4     ": null,
-  "2300 Yonge St, #1604, Toronto, ON, M4P 1E4": null,
-  "Suite 204, 2401 Yonge Street, Toronto, Ontario, M4P 3H1     ": null,
-  "North York General Hospital, 4001 Leslie Street, Toronto, Ontario, M2K 1E1     ": null,
-  "301 High Tech Road, Richmond Hill, Ontario, L4B4R2      ": null,
-  "Apartment 106, 1575 Steeles Avenue East, Willowdale, Ontario, M2M 3Y7     ": null,
-  "105-3292 Bayview Ave, North York, ON, M2M 4J5": null,
-  "3292 Bayview Ave, Suite 201, North York, ON, M2M 4J5": null,
-  "6023 Yonge St, Willowdale Medical Clinc, North York, ON, M2M 3W2": null,
-  "Bayview Finch Medical Centre, Suite 202, Willowdale, Ontario, M2M 4J5     ": null,
-  "2075 Bayview Ave, Sunnybrook Health Sciences Centre, Toronto, ON, M4N 3M5": null,
-  "Suite 403, 1100 Sheppard Avenue East, North York, Ontario, M2K 2W1     ": null,
-  "700-790 Bay St, Toronto, ON, M5G 1N8": null,
-  "Sunnybrook Health Sciences Centre, St. John's Rehab, Toronto, Ontario, M2M 2G1     ": null,
-  "PO Box 1800 Stn Main, 381 Church Street, Markham, ON, L3P 7P3": null,
-  "3292 Bayview Avenue, Suite 200, Willowdale, Ontario, M2M 4J5     ": null,
-  "5734 Yonge Street, Dynamic Endoscopy Clinic, Toronto, Ontario, M2M 3T3": null,
-  "529 Wilson Heights Blvd, Toronto, Ontario, M3H 2V7     ": null,
-  "105-3292 Bayview Ave. , Toronto, Ontario, M2M 4J5     ": null,
-  "Village Medical Center, Family Practice and Walk-In, Richmond Hill, Ontario, L4C 3B8     ": null,
-  "26 Holland St East, Bradford, Ontario, L3Z 2B1     ": null,
-  "61 Queen St E, St. Michael's Hospital, Toronto, ON, M5C 2T2": null,
-  "300-243 Consumers Rd, North York, ON, M2J 4W8": null,
-  "56-103Parkway Forest Dr, North York, ON, M2J 1L8": null,
-  "205 Cummer Avenue, Toronto, Ontario, M2M 2E8": null,
-  "Suite 201, 11 Newton Drive, Toronto, Ontario, M2M 2M6     ": null,
-  "Yorkview Medical Centre, 3695 Keele Street, North York, Ontario, M3J 1N2     ": null,
-  "11 Newton Dr, Unit 201, North York, ON, M2M 2M6": null,
-  "106-3292 Bayview Ave, North York, ON, M2M 4J5": null,
-  "202-29 Toronto St S, Toronto Street Medical Centre, Uxbridge, ON, L9P 1V9": null,
-  "Suite 202, 3292 Bayview Avenue, North York, Ontario, M2M 4J5     ": null,
-  "5700 Yonge Street, 5th floor, Toronto, Ontario, M2M 4K5     ": null,
-  "Suite 310, 4800 Leslie Street, Toronto, Ontario, M2J 2K9     ": null,
-  "Sunnybrook Health Sciences Centre, Department of Psychiatry, Toronto, Ontario, M4N 3M5     ": null,
-  "Halton Health Services Georgetown, c/o Department of Family Medicine, Georgetown, Ontario, L7G 2B8     ": null,
-  "Athlete's Care, Suite C-120, Toronto, Ontario                       , M5H 4C7     ": null,
-  "North York General Hospital, 8W, North York, Ontario, M2K 1E1     ": null,
-  "21 Kern Rd, North York, ON, M3B 1S9": null,
-  "Unit A2, St John's Rehab Campus, Toronto, Ontario, M2M 2G1     ": null,
-  "Suite 202, 3292 Bayview Avenue, Toronto, Ontario, M2M 4J5     ": null,
-  "Sunnybrook Health Sciences Centre, St Johns Rehab Campus, Toronto, Ontario, M2M 2G1     ": null,
-  "Suite 301, 4800 Leslie Street, North York, Ontario, M2J 2K9     ": null,
-  "North York General Hospital, General Site, Toronto, Ontario, M2K 1E1     ": null,
-  "41 Elliotwood Court, Toronto, Ontario, M2L 2P8": null,
-  "451 Paxton St, Lakeridge Health Port Perry, Port Perry, ON, L9L 1L9": null,
-  "285 CUMMER AVENUE, Toronto, Ontario                       , M2M 2G1     ": null,
-  "North York General Hospital, Department of Medical Imaging, Toronto, Ontario, M2K 1E1     ": null,
-  "285 Cummer Ave, Sunnybrook Health Sciences Centre, North York, ON, M2M 2G1": null,
-  "Ministry of Health & Long Term Care, 5700 Yonge Street, Toronto, Ontario, M2M 4K2     ": null,
-  "Joseph Brant Hospital , Hospitalist Medicine, Burlington, Ontario, L7S 1W7     ": null,
-  "Office of the Chief Coroner , 25 Morton Shulman Avenue, Toronto, Ontario, M2M 0B1     ": null,
-  "1502-5740 Yonge Street, Toronto, Ontario, M2M 0B1": null,
-  "118-7163 Yonge Street, Medical Center on Yonge, Markham, Ontario, L3T 0C8": null,
-  "285 Cummer Ave, St. John's Rehabilitation Hospital, North York, ON, M2M 2G1": null,
-  "11 Newton Drive, Toronto, Ontario, M2M 2M6": null,
-  "30 Bond Street, St. Michael's Hospital, Unity Health Toronto, Toronto, Ontario, M5B 1W8": null,
-  "214 - 10 York Mills Rd, Toronto, Ontario, M2P 2G4     ": null,
-  "37 The Links Road, Toronto, Ontario, M2P 1T7     ": null,
-  "2075 Bayview Avenue, Sunnybrook Health Sciences Centre, Toronto, Ontario, M4N 3M5": null,
-  "Suite 215, 4025 Yonge Street, Toronto, Ontario, M2P 2E3     ": null,
-  "5025 Yonge St, Suite 201, Toronto, Ontario, M2P 2S2     ": null,
-  "10 York Mills Road, Suite 214, Toronto, Ontario, M2P2G4      ": null,
-  "Bayview Medical Centre, 37 The Links Road, North York, Ontario, M2P 1T7     ": null,
-  "St Michael's Hospital, Dept of Ophthalmology & Vision Sci, Toronto, Ontario, M5C 2T2     ": null,
-  "37 The Links Rd, Bayview Medical Centre, North York, ON, M2P 1T7": null,
-  "Bayview Medical Centre, 37 The Links rd, North York, Ontario, M2P 1T7     ": null,
-  "Joseph Brant Hospital Emergency Dep, 1230 North Shore Boulevard East, Burlington, Ontario, L7S 1W7     ": null,
-  "4025 Yonge Street, The Centre For Minor Surgery, Toronto, Ontario, M2P 2E3": null,
-  "Suite 110, 4100 Yonge Street, Toronto, Ontario, M2P 2B7     ": null,
-  "Humber River Regional Hospital, Department of Anaesthesia, Toronto, Ontario, M3M 0B2     ": null,
-  "Division of Emergency Medicine, LHSC - VH Room E1 - 102, London, Ontario, N6A 5W9     ": null,
-  "Suite 215, 4025 Yonge Street, Toronto, Ontario                       , M2P 2E3     ": null,
-  "205 - 4025 Yonge Street, Toronto, Ontario, M2P 2E3": null,
-  "Toronto Cosmetic Surgery Institute, 100 Front St., Level B, Toronto, Ontario, M5J 1E3     ": null,
-  "Bayview Medical Centre, 37 The Links Road, Toronto, Ontario, M2P 1T7     ": null,
-  "Suite 211, 300 York Mills Road, Toronto, Ontario, M2L 2Y5     ": null,
-  "PO Box 35515 RPO York Mills Plaz, kinddoctor.ca, North York, Ontario, M2L 2Y4": null,
-  "Humber River Hospital, 1235 Wilson Ave, Toronto, Ontario, M3M0B2      ": null,
-  "3508 7th Line, Port Hope, ON, L1A 3V5": null,
-  "24 Tullamore Drive, Toronto, Ontario, M2L 2E8     ": null,
-  "2470 Bayview Avenue, North York, Ontario, M2L 1A7     ": null,
-  "3 Tullamore Drive, Toronto, Ontario, M2L 2E9": null,
-  "1 Vyner Road, Toronto, Ontario, M2L 2N3": null,
-  "Lakeridge Health Oshawa, 1 Hospital Court, Oshawa, Ontario, L1G 2B9     ": null,
-  "3695 Keele Street, Suite 104, Downsview, Ontario, M3J 1N2     ": null,
-  "1901 Yonge Street, Toronto, Ontario, M4S 1Y8": null,
-  "4915 Bathurst Street #214, Toronto, Ontario, M2R 1X9     ": null,
-  "UHN Toronto General Hospital, Department Of Medical Imaging, Toronto, Ontario, M5G 2N2     ": null,
-  "104-5927 Bathurst St, North York, ON, M2R 3T5": null,
-  "Unison Health & Community Services, 540 Finch Ave. W, Toronto, Ontario                       , M2R 1N7     ": null,
-  "North York General Hospital, Branson Ambulatory Care Centre, Toronto, Ontario, M2R 1N5     ": null,
-  "Suite 101, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5": null,
-  "5927 Bathurst St, North York, ON, M2R 3T5": null,
-  "Suite 210A, 305 Finch Avenue West, Willowdale, Ontario                       , M2R 1X9     ": null,
-  "Hawthorne Place, 2045 Finch Avenue West, Toronto, Ontario, M3N 1M9     ": null,
-  "Weston Medical Centre, 1953 Weston Road, Weston, Ontario, M9N 1W8     ": null,
-  "5927 Bathurst St, Suite 201, North York, ON, M2R 3T5": null,
-  "200 Finch Ave W, North York, ON, M2R 3W4": null,
-  "North York General Hospital, 10 Buchan Court, Toronto, Ontario, M2R 1N5     ": null,
-  "Suite 206, 840 Coxwell Avenue, Toronto, Ontario, M4C 5T2": null,
-  "130 Midland Ave, Midland Gardens LTC, Scarborough, ON, M1N 4E6": null,
-  "Humber River Hospital, 1235 Wilson Ave, Toronto, Ontario, M3M 0B2     ": null,
-  "212-4949 Bathurst St, North York, ON, M2R 1Y1": null,
-  "541 Finch Ave W, North York, ON, M2R 3Y3": null,
-  "Suite 212, 4949 Bathurst Street, Toronto, Ontario, M2R 1Y1     ": null,
-  "540 Finch Ave W, Unison Health & Community Services, North York, ON, M2R 1N7": null,
-  "Suite 403, 855 Broadview Avenue, Toronto, Ontario, M4K 3Z1     ": null,
-  "4242 Dundas St W, Kingsway Medical Centre, Toronto, ON, M8X 1Y6": null,
-  "Discovery Family Health, 77 Provost Drive, North York, Ontario, M2K 0B7     ": null,
-  "Finch West Medical Clinic, Suite 106, North York, Ontario, M2R 1M6     ": null,
-  "387 Ellerslie Avenue, Toronto, Ontario, M2R 1B8": null,
-  "Suite 204, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5     ": null,
-  "4949 Bathurst Street, Suite 212, Toronto, Ontario, M2R 1Y1     ": null,
-  "Unit 101, 1520 Steeles Avenue West, Vaughan, Ontario, L4K 3B9     ": null,
-  "4001 Leslie St, North York General Hospital, North York, ON, M2K 1E1": null,
-  "North York General Hospital, 4001 Leslie Street, North York, Ontario                       , M2K 1E1     ": null,
-  "Suite 217, 4915 Bathurst Street, Willowdale, Ontario, M2R 1X9     ": null,
-  "North York General Hospital, Department of Diagnostic Imaging, North York, Ontario, M2K 1E1     ": null,
-  "5935 Bathurst Street, Toronto, Toronto, Ontario, M2R 1Y8     ": null,
-  "5927 Bathurst Street, suite 204, Toronto, Ontario, M2R 3T5": null,
-  "5927 Bathurst Street, Suite 201, Toronto, Ontario, M2R 3T5": null,
-  "541 Finch Ave W, V alleyview Residence, North York, ON, M2R 3Y3": null,
-  "Department of Medical Imaging, North York General Hospital, Toronto, Ontario, M2K 1E1     ": null,
-  "Branson Division , 555 Finch Ave West,, Toronto, Ontario, M2K 1E1     ": null,
-  "Unit 1019- 4789 Yonge street, Hullmark Medical Clinic, Toronto, Ontario, M2N 0G3     ": null,
-  "5987 Bathurst street, Toronto, Ontario, M2R 1Z3     ": null,
-  "Pure Spa, 1936 Avenue rd, Toronto, Ontario, M5M4A1      ": null,
-  "Suite 102, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5     ": null,
-  "Suite 101, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5     ": null,
-  "100 - 4949 Bathurst Street, WELL Health Diagnostic Centre Northview Centre, Toronto, Ontario, M2R 1Y1": null,
-  "1184 Victoria Park Ave, East York, ON, M4B 2K6": null,
-  "204-5915 Leslie St, North York, ON, M2H 1J8": null,
-  "19 Rondeau Dr, Toronto, Ontario, M2H 1R5     ": null,
-  "St. Mary's General Hospital, Geriatric Medically Complex Clinic, Kitchener, Ontario, N2M 1B2     ": null,
-  "Chartwell Gibson LTC, 1925 Steeles Avenue East, Toronto, Ontario, M2H 2H3     ": null,
-  "Suite 208, 3570 Victoria Park Avenue, Toronto, Ontario, M2H 3S2     ": null,
-  "5935 Leslie Street, Willowdale, Ontario, M2H 1J8     ": null,
-  "Thornhill Family Physicians, Unit 35, Thornhill, Ontario, L4J 7Y3     ": null,
-  "89 Skymark Drive, Toronto, Ontario, M2H 3S6": null,
-  "101-250 Harding Blvd W, Richmond Hill, ON, L4C 9M7": null,
-  "A-2 Brahms Ave, North York, ON, M2H 1H1": null,
-  "491 Lawrence Ave W, North York, ON, M5M 1C7": null,
-  "491 Lawrence Avenue West, Midtown Pediatrics, Toronto, Ontario, M5M 1C7": null,
-  "Women's College Hospital, 76 Grenville Street, Toronto, Ontario, M5S 1B2     ": null,
-  "103-8760 Jane St, Concord, ON, L4K 0E8": null,
-  "Mount Sinai Hospital, 1602 - 600 University Avenue, Toronto, Ontario, M5G 1X5     ": null,
-  "Cleveland Clinic Canada, 181 Bay Street, Suite 3000, Toronto, Ontario, M5J 2T3     ": null,
-  "205, 491 Lawrence Ave west, Toronto, Ontario, M5M 1C7     ": null,
-  "491 Lawrence Avenue West, Suite 101, Toronto, Ontario, M5M 1C7     ": null,
-  "1769 Avenue Road, Toronto, Ontario, M5M 3Y8     ": null,
-  "2100 Bovaird Dr E, William Osler Hospital Center, Brampton, ON, L6R 3J7": null,
-  "Toronto General Hospital, Suite 4N 508, Toronto, Ontario, M5G 2N2     ": null,
-  "South Medical Tower, Suite 228, Vancouver, British Columbia, V5Z 2M9     ": null,
-  "371 Fairlawn Ave, North York, ON, M5M 3Y4": null,
-  "10 Weetwood St, North York, ON, M5M 4C8": null,
-  "491 Lawrence Avenue West, Suite 100, Toronto, Ontario, M5M 1C7     ": null,
-  "Suite 312, 790 Bay Street, Toronto, Ontario, M5G 1N8     ": null,
-  "Suite 500, 491 Lawrence Avenue West, Toronto, Ontario, M5M 1C7     ": null,
-  "500-491 Lawrence Ave W, MS Cardiology Services, North York, ON, M5M 1C7": null,
-  "500-491 Lawrence Ave W, North York, ON, M5M 1C7": null,
-  "107 Glengarry Avenue, Toronto, Ontario, M5M 1E1": null,
-  "491 Lawrence Avenue West, Toronto, Ontario, M5M 1C7": null,
-  "101-491 Lawrence Ave W, North York, ON, M5M 1C7": null,
-  "Suite 101, 491 Lawrence Avenue West, Toronto, Ontario, M5M 1C7     ": null,
-  "Mount Sinai Hospital, Suite 1609, Toronto, Ontario, M5G 1X5     ": null,
-  "Suite 203, 2409 Yonge street, Toronto, Ontario, M5M 1B2     ": null,
-  "491 Lawrence Ave W, Suite 101, North York, ON, M5M 1C7": null,
-  "VIRCAN Clinics, Suite 301, Richmond Hill, Ontario, L4B 3P7     ": null,
-  "DermAtelier on Avenue, 1896 Avenue Road, Toronto, ON, M5M 3Z8": null,
-  "100-491 Lawrence Ave W, Toronto, ON, M5M 1C7": null,
-  "168 Dunblaine Ave, North York, ON, M5M 2S5": null,
-  "59A Bedford Park Avenue, Toronto, Ontario, M5M1H8      ": null,
-  "664 Woburn Avenue, Toronto, Ontario, M5M 1M1": null,
-  "250 Harding Boulevard West, Suite 404, Richmond Hill, Ontario, L4C 9M7": null,
-  "272 Lawrence Avenue West, Suite 205, Toronto, Ontario, M5M 4M1     ": null,
-  "Avenue plastic surgery, 1802 Avenue Road, Toronto, Ontario, M5M 3Z1     ": null,
-  "University Health Network, Toronto General Hospital, Toronto, Ontario, M5G 2C4     ": null,
-  "362 Fairlawn Avenue, Office, Toronto, Ontario, M5M 1T6": null,
-  "1896 Avenue Rd, North York, ON, M5M 3Z8": null,
-  "200 Elizabeth Street, Toronto General Hospital, Toronto, Ontario, M5G 2C4": null,
-  "Mount Sinai Hospital, 600 University Avenue, Toronto, Ontario, M5G 1X5     ": null,
-  "Toronto Western Hospital, 5MC 420 C, Toronto, Ontario, M5T 2S8     ": null,
-  "Sunnybrook Health Sciences Ctre, Division of Plastic Surgery, Toronto, Ontario, M4N 3M5     ": null,
-  "Suite 101, 491 Lawrence Avenue West, Toronto, Ontario                       , M5M 1C7     ": null,
-  "1802 Avenue Road, Toronto, Ontario, M5M 3Z1     ": null,
-  "7 Yonge Blvd, Toronto, ON, M5M 3G6": null,
-  "Mount Sinai Hospital, Department of Cardiology, Toronto, Ontario, M5G 1X5     ": null,
-  "9600 Bathurst St, Vaughan, ON, L6A 3Z8": null,
-  "800 Commissioners Rd E, London, ON, N6A 5W9": null,
-  "Toronto General Hospital, 11Th Floor, Toronto, Ontario, M5G 2N2     ": null,
-  "Mount Sinai Hospital, Suite 1604, Toronto, Ontario, M5G 1X5     ": null,
-  "323 Cranbrooke Ave, Toronto, ON, M5M 1M9": null,
-  "443 Fairlawn Avenue, Toronto, Ontario, M5M 1T9": null,
-  "2291 Kipling Avenue, Rexdale, Ontario, M9W 4L6     ": null,
-  "Hamilton Health Sciences, 237 Barton Street East, Hamilton, Ontario, L8L 2X2     ": null,
-  "Suite 101, 491 Lawrence Avenue, Toronto, Ontario, M5M 1C7     ": null,
-  "38 LAWRENCE AVENUE WEST, Toronto, Ontario, M5M 1A2     ": null,
-  "600 University Avenue, Suite 4-230, Toronto, Ontario, M5G 1X5": null,
-  "47 Sandringham Dr, Toronto, ON, M5M 3G4": null,
-  "Doctors Office Toronto, Suite 101, Toronto, Ontario, M5M 1C7     ": null,
-  "Suite 101, 491 Lawrence Ave W, North York, Ontario, M5M 1C7     ": null,
-  "59-2720 North Park Dr, Castlemore Pediatric Clinic, Brampton, ON, L6S 0E9": null,
-  "240 Duncan Mill Road, Kidcrew Medical, Toronto, Ontario, M3B 3S6": null,
-  "9080 Yonge Street, Unit 12, Richmond Hill, Ontario, L4C 0Y7": null,
-  "Telemed MD, 2200 Dundas St E, Mississauga, ON, L4X 2V3": null,
-  "51a Underhill Drive, Toronto, Ontario, M3A 2J8": null,
-  "The Wharton Medical Clinic, 2951 Walker's Line, Burlington, ON, L7M 4Y1": null,
-  "East York Medical Centre, Suite 27E, Toronto, Ontario, M4H 1C3     ": null,
-  "unit 200-51a Underhill Drive, Toronto, Ontario, M3A 2J8": null,
-  "1252 Lawrence Ave E, unit 2, North York, ON, M3A 1C3": null,
-  "1252 Lawrence Ave E, Victoria Medical Group, North York, ON, M3A 1C3": null,
-  "Unit 130 , 5 Park Home Ave., North York, Ontario, M3A 1Z4     ": null,
-  "3030 Birchmount Road, Scarborough, Ontario, M1W 3W3     ": null,
-  "The Scarborough General  Hospital, 3050 Lawrence Avenue East, Scarborough, Ontario, M1P 2V5     ": null,
-  "Division of Emergency Medicine, William Osler Health System, Brampton, Ontario, L6R 3J7     ": null,
-  "51a Underhill Drive, unit 200, Toronto, Ontario, M3A 2J8": null,
-  "21 Queensway W., Suite 110, Mississauga, Ontario, L5B 1B6     ": null,
-  "201-1252 Lawrence Ave E, North York, ON, M3A 1C3": null,
-  "The Doctors Office, Royal Bank Plaza Medical Centre, Toronto, Ontario                       , M5J 2J3     ": null,
-  "Suite 412, 1371 Neilson Road, Scarborough, Ontario, M1B 4Z8     ": null,
-  "51a Underhill Drive, Suite 200, Toronto, Ontario, M3A 2J8": null,
-  "Parkwood Medical Centre, Unit F1-1, Toronto, Ontario, M3A 1Z4     ": null,
-  "10 Lower Jarvis Street, Primacy Queens Quay Family Health, Toronto, Ontario, M5L 1G4": null,
-  "511-220 Duncan Mill Road, 511-220 Duncan Mill Rd., Toronto, Ontario, M3A 3R6": null,
-  "30 Parmbelle Crescent, Toronto, Ontario, M3A 3G6     ": null
+  "6023 Yonge St, North York, ON, M2M 3W2": {
+    "lat": 43.7893228,
+    "lng": -79.4177187
+  },
+  "20 Drewry Avenue, Toronto, Ontario, M2M 1C8     ": {
+    "lat": 43.7871343,
+    "lng": -79.4175354
+  },
+  "43 Wellesley St E, Toronto, ON, M4Y 1H1": {
+    "lat": 43.665097,
+    "lng": -79.3822927
+  },
+  "700 Gordon St, Whitby, ON, L1N 5S9": {
+    "lat": 43.8488592,
+    "lng": -78.9453682
+  },
+  "Scarborough General Hospital, 3050 Lawrence Avenue East, Scarborough, Ontario, M1P 2V5     ": {
+    "lat": 43.7564698,
+    "lng": -79.2477258
+  },
+  "5925 Yonge Street, North York, Ontario, M2M 3V7     ": {
+    "lat": 43.7872539,
+    "lng": -79.4172021
+  },
+  "8 Malabar Place, North York, Ontario                       , M3B 1A5     ": {
+    "lat": 43.7365579,
+    "lng": -79.3580548
+  },
+  "285 Cummer Avenue, Toronto, Ontario, M2M 2G1     ": {
+    "lat": 43.787308,
+    "lng": -79.4042741
+  },
+  "207 - 10 Cottrelle Blvd, Brampton, Ontario, L6S 0E2     ": {
+    "lat": 43.7629282,
+    "lng": -79.7109829
+  },
+  "Brampton Civic Hospital, 2100 Bovaird Drive E., Brampton, Ontario, L6R 3J7     ": {
+    "lat": 43.7469379,
+    "lng": -79.7438344
+  },
+  "North York General Hospital, 4001 Leslie Street, Toronto, Ontario, M2K 1E1     ": {
+    "lat": 43.7691855,
+    "lng": -79.3625797
+  },
+  "301 High Tech Road, Richmond Hill, Ontario, L4B4R2      ": {
+    "lat": 43.8414329,
+    "lng": -79.4261155
+  },
+  "529 Wilson Heights Blvd, Toronto, Ontario, M3H 2V7     ": {
+    "lat": 43.7505426,
+    "lng": -79.4555983
+  },
+  "26 Holland St East, Bradford, Ontario, L3Z 2B1     ": {
+    "lat": 44.1143911,
+    "lng": -79.5637138
+  },
+  "205 Cummer Avenue, Toronto, Ontario, M2M 2E8": {
+    "lat": 43.7881335,
+    "lng": -79.4073951
+  },
+  "21 Kern Rd, North York, ON, M3B 1S9": {
+    "lat": 43.7490789,
+    "lng": -79.3491674
+  },
+  "41 Elliotwood Court, Toronto, Ontario, M2L 2P8": {
+    "lat": 43.7594399,
+    "lng": -79.3643257
+  },
+  "285 CUMMER AVENUE, Toronto, Ontario                       , M2M 2G1     ": {
+    "lat": 43.787308,
+    "lng": -79.4042741
+  },
+  "11 Newton Drive, Toronto, Ontario, M2M 2M6": {
+    "lat": 43.7929591,
+    "lng": -79.4176783
+  },
+  "214 - 10 York Mills Rd, Toronto, Ontario, M2P 2G4     ": {
+    "lat": 43.7454582,
+    "lng": -79.396473
+  },
+  "37 The Links Road, Toronto, Ontario, M2P 1T7     ": {
+    "lat": 43.7513583,
+    "lng": -79.4018675
+  },
+  "Humber River Hospital, 1235 Wilson Ave, Toronto, Ontario, M3M0B2      ": {
+    "lat": 43.7231725,
+    "lng": -79.4894205
+  },
+  "3508 7th Line, Port Hope, ON, L1A 3V5": {
+    "lat": 44.0372384,
+    "lng": -78.4020249
+  },
+  "24 Tullamore Drive, Toronto, Ontario, M2L 2E8     ": {
+    "lat": 43.7577855,
+    "lng": -79.362252
+  },
+  "2470 Bayview Avenue, North York, Ontario, M2L 1A7     ": {
+    "lat": 43.7423565,
+    "lng": -79.3832456
+  },
+  "3 Tullamore Drive, Toronto, Ontario, M2L 2E9": {
+    "lat": 43.7564918,
+    "lng": -79.3625992
+  },
+  "1 Vyner Road, Toronto, Ontario, M2L 2N3": {
+    "lat": 43.7603563,
+    "lng": -79.3737015
+  },
+  "Lakeridge Health Oshawa, 1 Hospital Court, Oshawa, Ontario, L1G 2B9     ": {
+    "lat": 43.9054514,
+    "lng": -78.8689344
+  },
+  "1901 Yonge Street, Toronto, Ontario, M4S 1Y8": {
+    "lat": 43.6982286,
+    "lng": -79.3963524
+  },
+  "5927 Bathurst St, North York, ON, M2R 3T5": {
+    "lat": 43.7813268,
+    "lng": -79.4443761
+  },
+  "Hawthorne Place, 2045 Finch Avenue West, Toronto, Ontario, M3N 1M9     ": {
+    "lat": 43.7560367,
+    "lng": -79.5213903
+  },
+  "200 Finch Ave W, North York, ON, M2R 3W4": {
+    "lat": 43.7761143,
+    "lng": -79.4325988
+  },
+  "Humber River Hospital, 1235 Wilson Ave, Toronto, Ontario, M3M 0B2     ": {
+    "lat": 43.7231725,
+    "lng": -79.4894205
+  },
+  "541 Finch Ave W, North York, ON, M2R 3Y3": {
+    "lat": 43.7708866,
+    "lng": -79.446088
+  },
+  "387 Ellerslie Avenue, Toronto, Ontario, M2R 1B8": {
+    "lat": 43.7669262,
+    "lng": -79.4338116
+  },
+  "North York General Hospital, 4001 Leslie Street, North York, Ontario                       , M2K 1E1     ": {
+    "lat": 43.7691855,
+    "lng": -79.3625797
+  },
+  "5935 Bathurst Street, Toronto, Toronto, Ontario, M2R 1Y8     ": {
+    "lat": 43.7818272,
+    "lng": -79.444486
+  },
+  "5987 Bathurst street, Toronto, Ontario, M2R 1Z3     ": {
+    "lat": 43.7863118,
+    "lng": -79.4456738
+  },
+  "1184 Victoria Park Ave, East York, ON, M4B 2K6": {
+    "lat": 43.7096247,
+    "lng": -79.2965093
+  },
+  "19 Rondeau Dr, Toronto, Ontario, M2H 1R5     ": {
+    "lat": 43.8050186,
+    "lng": -79.36936
+  },
+  "89 Skymark Drive, Toronto, Ontario, M2H 3S6": {
+    "lat": 43.795262,
+    "lng": -79.3545302
+  },
+  "A-2 Brahms Ave, North York, ON, M2H 1H1": {
+    "lat": 43.7967247,
+    "lng": -79.3600449
+  },
+  "491 Lawrence Ave W, North York, ON, M5M 1C7": {
+    "lat": 43.7191314,
+    "lng": -79.4288641
+  },
+  "Women's College Hospital, 76 Grenville Street, Toronto, Ontario, M5S 1B2     ": {
+    "lat": 43.6617305,
+    "lng": -79.3875392
+  },
+  "1769 Avenue Road, Toronto, Ontario, M5M 3Y8     ": {
+    "lat": 43.7293689,
+    "lng": -79.4182503
+  },
+  "371 Fairlawn Ave, North York, ON, M5M 3Y4": {
+    "lat": 43.7282776,
+    "lng": -79.4161117
+  },
+  "10 Weetwood St, North York, ON, M5M 4C8": {
+    "lat": 43.7316816,
+    "lng": -79.4213731
+  },
+  "107 Glengarry Avenue, Toronto, Ontario, M5M 1E1": {
+    "lat": 43.7242813,
+    "lng": -79.4094326
+  },
+  "491 Lawrence Avenue West, Toronto, Ontario, M5M 1C7": {
+    "lat": 43.7191314,
+    "lng": -79.4288641
+  },
+  "100-491 Lawrence Ave W, Toronto, ON, M5M 1C7": {
+    "lat": 43.7223548,
+    "lng": -79.4152351
+  },
+  "168 Dunblaine Ave, North York, ON, M5M 2S5": {
+    "lat": 43.7337595,
+    "lng": -79.4301821
+  },
+  "59A Bedford Park Avenue, Toronto, Ontario, M5M1H8      ": {
+    "lat": 43.7254412,
+    "lng": -79.4121764
+  },
+  "664 Woburn Avenue, Toronto, Ontario, M5M 1M1": {
+    "lat": 43.7234739,
+    "lng": -79.4265322
+  },
+  "1896 Avenue Rd, North York, ON, M5M 3Z8": {
+    "lat": 43.7326425,
+    "lng": -79.4196091
+  },
+  "Mount Sinai Hospital, 600 University Avenue, Toronto, Ontario, M5G 1X5     ": {
+    "lat": 43.6574502,
+    "lng": -79.3903211
+  },
+  "1802 Avenue Road, Toronto, Ontario, M5M 3Z1     ": {
+    "lat": 43.7304536,
+    "lng": -79.4190986
+  },
+  "7 Yonge Blvd, Toronto, ON, M5M 3G6": {
+    "lat": 43.7341821,
+    "lng": -79.4047662
+  },
+  "9600 Bathurst St, Vaughan, ON, L6A 3Z8": {
+    "lat": 43.8556236,
+    "lng": -79.4606664
+  },
+  "800 Commissioners Rd E, London, ON, N6A 5W9": {
+    "lat": 42.9602596,
+    "lng": -81.2254716
+  },
+  "323 Cranbrooke Ave, Toronto, ON, M5M 1M9": {
+    "lat": 43.7266504,
+    "lng": -79.4148418
+  },
+  "443 Fairlawn Avenue, Toronto, Ontario, M5M 1T9": {
+    "lat": 43.7269243,
+    "lng": -79.4220258
+  },
+  "2291 Kipling Avenue, Rexdale, Ontario, M9W 4L6     ": {
+    "lat": 43.7304354,
+    "lng": -79.5756028
+  },
+  "38 LAWRENCE AVENUE WEST, Toronto, Ontario, M5M 1A2     ": {
+    "lat": 43.7249953,
+    "lng": -79.4034354
+  },
+  "47 Sandringham Dr, Toronto, ON, M5M 3G4": {
+    "lat": 43.7453897,
+    "lng": -79.4162413
+  },
+  "51a Underhill Drive, Toronto, Ontario, M3A 2J8": {
+    "lat": 43.7450285,
+    "lng": -79.3255619
+  },
+  "3030 Birchmount Road, Scarborough, Ontario, M1W 3W3     ": {
+    "lat": 43.8017404,
+    "lng": -79.3091965
+  },
+  "30 Parmbelle Crescent, Toronto, Ontario, M3A 3G6     ": {
+    "lat": 43.7541133,
+    "lng": -79.3419751
+  },
+  "306-250 Harding Blvd, Richmond Hill, ON, L4C 9M7": {
+    "lat": 43.86839916489292,
+    "lng": -79.44866602908287
+  },
+  "2075 Bayview Avenue, Sunnybrook Health Sciences Centre, Toronto, Ontario, M4G 1R7": {
+    "lat": 43.714895547,
+    "lng": -79.377759417
+  },
+  "622 Bloor St W, Bloor Kids, Toronto, ON, M6G 1K7": {
+    "lat": 43.64877,
+    "lng": -79.38171
+  },
+  "2330 Kennedy Road, Suite 210, Scarborough, Ontario, M1T 0A2     ": {
+    "lat": 43.78408,
+    "lng": -79.289331
+  },
+  "301-491 Eglinton Ave W, Kindercare Pediatrics, Toronto, ON, M5N 1A8": {
+    "lat": 43.703738271,
+    "lng": -79.412546966
+  },
+  "The Scarborough Hospital, Birchmount Division, Scarborough, Ontario                       , M1W 3W3     ": {
+    "lat": 43.7729744,
+    "lng": -79.2576479
+  },
+  "Scarborough General Hospital, Department of Anesthesia, Scarborough, Ontario                       , M1P 2V5     ": {
+    "lat": 43.7729744,
+    "lng": -79.2576479
+  },
+  "Suite 300, 5734 Yonge Street, Toronto, Ontario, M2M 4E7     ": {
+    "lat": 43.78271,
+    "lng": -79.416412
+  },
+  "St. John's Rehab, 285 Cummer Ave, Toronto, Ontario, M2M 2G1     ": {
+    "lat": 43.789534,
+    "lng": -79.404929
+  },
+  "30 The Queensway, St Joseph's Health Center, Toronto, ON, M6R 1B5": {
+    "lat": 43.6394576,
+    "lng": -79.4507928
+  },
+  "Suite 301, 3292 Bayview Ave, North York, ON, M2M 4J5": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "Unit 304, 372 Hollandview Trail, Aurora, Ontario                       , L4G 0A5     ": {
+    "lat": 44.0148075,
+    "lng": -79.4494895
+  },
+  "Suite 300, 3292 Bayview Avenue, Toronto, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "Sunnybrook Health Sciences Centre, FG-29 Department of Psychiatry, Toronto, Ontario, M4N 3M5     ": {
+    "lat": 43.721873,
+    "lng": -79.373888
+  },
+  "Suite 105, 3292 Bayview Avenue, Toronto, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "Dynamic Medical Centre, 5734 Yonge Street, Toronto, Ontario, M2M 4E7     ": {
+    "lat": 43.78271,
+    "lng": -79.416412
+  },
+  "200-400 Bradwick Dr, Concord, ON, L4K 5V9": {
+    "lat": 43.8154468,
+    "lng": -79.4886391
+  },
+  "Suite 202, 3292 Bayview Avenue, Willowdale, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "285 Cummer Ave, st John's Rehab, North York, ON, M2M 2G1": {
+    "lat": 43.789534,
+    "lng": -79.404929
+  },
+  "Sunnybrook Health Sciences Centre, St. John's Rehab, North York, Ontario, M2M 2G1     ": {
+    "lat": 43.721873,
+    "lng": -79.373888
+  },
+  "GreeneStone Clinic Toronto, 5734 Yonge Street, Toronto, Ontario, M2M4E7      ": {
+    "lat": 43.78271,
+    "lng": -79.416412
+  },
+  "Trillium Health Partners, 150 Sherway Drive, Etobicoke, Ontario, M9C 1A6     ": {
+    "lat": 43.6099866,
+    "lng": -79.56272346216254
+  },
+  "Parkdale Queen West CHC, Queen West Site, Toronto, Ontario, M4P 2H4     ": {
+    "lat": 43.6367,
+    "lng": -79.43934
+  },
+  "3292 Bayview Ave, Suite 301, North York, ON, M2M 4J5": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "Cummer Lodge, Long Term Care Home, 205 Cummer Ave, North York, Ontario, M2M 2E8     ": {
+    "lat": 43.7881335,
+    "lng": -79.4073951172708
+  },
+  "5734 Yonge St, Dynamic Medical Center, North York, ON, M2M 4E7": {
+    "lat": 43.78271,
+    "lng": -79.416412
+  },
+  "3292 Bayview Avenue Suite 306, North York, ON, Toronto, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "Windsor Regional Hospital, Metropolitan Campus, Windsor, Ontario, N8W 1L9     ": {
+    "lat": 42.300342799999996,
+    "lng": -82.99716855603518
+  },
+  "306 - 3292 Bayview Ave, North York, ON, M2M 4J5": {
+    "lat": 43.7897928,
+    "lng": -79.3934535
+  },
+  "Center Point Medical Centre, 225 - 6228 Yonge St, North York, Ontario, M2M 3X4     ": {
+    "lat": 43.75012952723148,
+    "lng": -79.40316425156166
+  },
+  "2300 Yonge St, #1604, Toronto, ON, M4P 1E4": {
+    "lat": 43.707155900000004,
+    "lng": -79.39908344383059
+  },
+  "Suite 204, 2401 Yonge Street, Toronto, Ontario, M4P 3H1     ": {
+    "lat": 43.7100154,
+    "lng": -79.3988727
+  },
+  "Apartment 106, 1575 Steeles Avenue East, Willowdale, Ontario, M2M 3Y7     ": {
+    "lat": 43.8055,
+    "lng": -79.3840603
+  },
+  "105-3292 Bayview Ave, North York, ON, M2M 4J5": {
+    "lat": 43.791653487469176,
+    "lng": -79.39345445633514
+  },
+  "3292 Bayview Ave, Suite 201, North York, ON, M2M 4J5": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "6023 Yonge St, Willowdale Medical Clinc, North York, ON, M2M 3W2": {
+    "lat": 43.78932279230769,
+    "lng": -79.41771869230769
+  },
+  "Bayview Finch Medical Centre, Suite 202, Willowdale, Ontario, M2M 4J5     ": {
+    "lat": 43.7904,
+    "lng": -79.3931999
+  },
+  "Suite 403, 1100 Sheppard Avenue East, North York, Ontario, M2K 2W1     ": {
+    "lat": 43.77053,
+    "lng": -79.370945
+  },
+  "700-790 Bay St, Toronto, ON, M5G 1N8": {
+    "lat": 43.658328,
+    "lng": -79.384925
+  },
+  "Sunnybrook Health Sciences Centre, St. John's Rehab, Toronto, Ontario, M2M 2G1     ": {
+    "lat": 43.721873,
+    "lng": -79.373888
+  },
+  "PO Box 1800 Stn Main, 381 Church Street, Markham, ON, L3P 7P3": {
+    "lat": 43.885184,
+    "lng": -79.231293
+  },
+  "3292 Bayview Avenue, Suite 200, Willowdale, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "5734 Yonge Street, Dynamic Endoscopy Clinic, Toronto, Ontario, M2M 3T3": {
+    "lat": 43.782701,
+    "lng": -79.41668
+  },
+  "105-3292 Bayview Ave. , Toronto, Ontario, M2M 4J5     ": {
+    "lat": 43.791653487469176,
+    "lng": -79.39345445633514
+  },
+  "Village Medical Center, Family Practice and Walk-In, Richmond Hill, Ontario, L4C 3B8     ": {
+    "lat": 43.95949145,
+    "lng": -79.41268313092391
+  },
+  "61 Queen St E, St. Michael's Hospital, Toronto, ON, M5C 2T2": {
+    "lat": 43.652917,
+    "lng": -79.376483
+  },
+  "300-243 Consumers Rd, North York, ON, M2J 4W8": {
+    "lat": 43.77066139441538,
+    "lng": -79.32959430865354
+  },
+  "56-103Parkway Forest Dr, North York, ON, M2J 1L8": {
+    "lat": 43.770325375,
+    "lng": -79.340989875
+  },
+  "Suite 201, 11 Newton Drive, Toronto, Ontario, M2M 2M6     ": {
+    "lat": 43.7929591,
+    "lng": -79.41767826184702
+  },
+  "Yorkview Medical Centre, 3695 Keele Street, North York, Ontario, M3J 1N2     ": {
+    "lat": 43.7548238,
+    "lng": -79.4882749
+  },
+  "11 Newton Dr, Unit 201, North York, ON, M2M 2M6": {
+    "lat": 43.7929591,
+    "lng": -79.41767826184702
+  },
+  "106-3292 Bayview Ave, North York, ON, M2M 4J5": {
+    "lat": 43.791653487469176,
+    "lng": -79.39345445633514
+  },
+  "202-29 Toronto St S, Toronto Street Medical Centre, Uxbridge, ON, L9P 1V9": {
+    "lat": 44.10697815795443,
+    "lng": -79.12339445085883
+  },
+  "Suite 202, 3292 Bayview Avenue, North York, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "5700 Yonge Street, 5th floor, Toronto, Ontario, M2M 4K5     ": {
+    "lat": 43.780754,
+    "lng": -79.415705
+  },
+  "Suite 310, 4800 Leslie Street, Toronto, Ontario, M2J 2K9     ": {
+    "lat": 43.7793751,
+    "lng": -79.3657385
+  },
+  "Sunnybrook Health Sciences Centre, Department of Psychiatry, Toronto, Ontario, M4N 3M5     ": {
+    "lat": 43.721873,
+    "lng": -79.373888
+  },
+  "Halton Health Services Georgetown, c/o Department of Family Medicine, Georgetown, Ontario, L7G 2B8     ": {
+    "lat": 43.6502652,
+    "lng": -79.9036058
+  },
+  "Athlete's Care, Suite C-120, Toronto, Ontario                       , M5H 4C7     ": {
+    "lat": 43.6463135,
+    "lng": -79.4075995
+  },
+  "North York General Hospital, 8W, North York, Ontario, M2K 1E1     ": {
+    "lat": 43.7691855,
+    "lng": -79.3625797029496
+  },
+  "Unit A2, St John's Rehab Campus, Toronto, Ontario, M2M 2G1     ": {
+    "lat": 43.7896,
+    "lng": -79.4055
+  },
+  "Suite 202, 3292 Bayview Avenue, Toronto, Ontario, M2M 4J5     ": {
+    "lat": 43.789727,
+    "lng": -79.393657
+  },
+  "Sunnybrook Health Sciences Centre, St Johns Rehab Campus, Toronto, Ontario, M2M 2G1     ": {
+    "lat": 43.721873,
+    "lng": -79.373888
+  },
+  "Suite 301, 4800 Leslie Street, North York, Ontario, M2J 2K9     ": {
+    "lat": 43.7793751,
+    "lng": -79.3657385
+  },
+  "North York General Hospital, General Site, Toronto, Ontario, M2K 1E1     ": {
+    "lat": 43.7691855,
+    "lng": -79.3625797029496
+  },
+  "451 Paxton St, Lakeridge Health Port Perry, Port Perry, ON, L9L 1L9": {
+    "lat": 44.1051733,
+    "lng": -78.95442093018512
+  },
+  "North York General Hospital, Department of Medical Imaging, Toronto, Ontario, M2K 1E1     ": {
+    "lat": 43.7695999,
+    "lng": -79.3642
+  },
+  "285 Cummer Ave, Sunnybrook Health Sciences Centre, North York, ON, M2M 2G1": {
+    "lat": 43.789534,
+    "lng": -79.404929
+  },
+  "Ministry of Health & Long Term Care, 5700 Yonge Street, Toronto, Ontario, M2M 4K2     ": {
+    "lat": 43.780754,
+    "lng": -79.415705
+  },
+  "Joseph Brant Hospital , Hospitalist Medicine, Burlington, Ontario, L7S 1W7     ": {
+    "lat": 43.316159,
+    "lng": -79.802705
+  },
+  "Office of the Chief Coroner , 25 Morton Shulman Avenue, Toronto, Ontario, M2M 0B1     ": {
+    "lat": 43.725499,
+    "lng": -79.484671
+  },
+  "1502-5740 Yonge Street, Toronto, Ontario, M2M 0B1": {
+    "lat": 43.6888254,
+    "lng": -79.3945626
+  },
+  "118-7163 Yonge Street, Medical Center on Yonge, Markham, Ontario, L3T 0C8": {
+    "lat": 43.821170049,
+    "lng": -79.425605604
+  },
+  "285 Cummer Ave, St. John's Rehabilitation Hospital, North York, ON, M2M 2G1": {
+    "lat": 43.789534,
+    "lng": -79.404929
+  },
+  "30 Bond Street, St. Michael's Hospital, Unity Health Toronto, Toronto, Ontario, M5B 1W8": {
+    "lat": 43.6529779,
+    "lng": -79.3775788
+  },
+  "2075 Bayview Avenue, Sunnybrook Health Sciences Centre, Toronto, Ontario, M4N 3M5": {
+    "lat": 43.7220178,
+    "lng": -79.3722543
+  },
+  "Suite 215, 4025 Yonge Street, Toronto, Ontario, M2P 2E3     ": {
+    "lat": 43.7448366,
+    "lng": -79.4062592
+  },
+  "5025 Yonge St, Suite 201, Toronto, Ontario, M2P 2S2     ": {
+    "lat": 43.766684,
+    "lng": -79.412073
+  },
+  "10 York Mills Road, Suite 214, Toronto, Ontario, M2P2G4      ": {
+    "lat": 43.744444,
+    "lng": -79.406212
+  },
+  "Bayview Medical Centre, 37 The Links Road, North York, Ontario, M2P 1T7     ": {
+    "lat": 43.75135828571219,
+    "lng": -79.40186750714035
+  },
+  "St Michael's Hospital, Dept of Ophthalmology & Vision Sci, Toronto, Ontario, M5C 2T2     ": {
+    "lat": 43.6529,
+    "lng": -79.3764999
+  },
+  "37 The Links Rd, Bayview Medical Centre, North York, ON, M2P 1T7": {
+    "lat": 43.750003367,
+    "lng": -79.402304695
+  },
+  "Bayview Medical Centre, 37 The Links rd, North York, Ontario, M2P 1T7     ": {
+    "lat": 43.75135828571219,
+    "lng": -79.40186750714035
+  },
+  "Joseph Brant Hospital Emergency Dep, 1230 North Shore Boulevard East, Burlington, Ontario, L7S 1W7     ": {
+    "lat": 43.3169918,
+    "lng": -79.8031006
+  },
+  "4025 Yonge Street, The Centre For Minor Surgery, Toronto, Ontario, M2P 2E3": {
+    "lat": 43.7448366,
+    "lng": -79.4062592
+  },
+  "Suite 110, 4100 Yonge Street, Toronto, Ontario, M2P 2B7     ": {
+    "lat": 43.7460085,
+    "lng": -79.40800571467392
+  },
+  "Humber River Regional Hospital, Department of Anaesthesia, Toronto, Ontario, M3M 0B2     ": {
+    "lat": 43.7236635,
+    "lng": -79.4888843
+  },
+  "Division of Emergency Medicine, LHSC - VH Room E1 - 102, London, Ontario, N6A 5W9     ": {
+    "lat": 42.9602596,
+    "lng": -81.2254716
+  },
+  "Suite 215, 4025 Yonge Street, Toronto, Ontario                       , M2P 2E3     ": {
+    "lat": 43.7448366,
+    "lng": -79.4062592
+  },
+  "205 - 4025 Yonge Street, Toronto, Ontario, M2P 2E3": {
+    "lat": 43.7452241,
+    "lng": -79.40695224999999
+  },
+  "Toronto Cosmetic Surgery Institute, 100 Front St., Level B, Toronto, Ontario, M5J 1E3     ": {
+    "lat": 43.64590915,
+    "lng": -79.3813637083646
+  },
+  "Bayview Medical Centre, 37 The Links Road, Toronto, Ontario, M2P 1T7     ": {
+    "lat": 43.75135828571219,
+    "lng": -79.40186750714035
+  },
+  "Suite 211, 300 York Mills Road, Toronto, Ontario, M2L 2Y5     ": {
+    "lat": 43.748277099999996,
+    "lng": -79.38484422777356
+  },
+  "PO Box 35515 RPO York Mills Plaz, kinddoctor.ca, North York, Ontario, M2L 2Y4": {
+    "lat": 43.7543217,
+    "lng": -79.44910565950553
+  },
+  "3695 Keele Street, Suite 104, Downsview, Ontario, M3J 1N2     ": {
+    "lat": 43.7546638,
+    "lng": -79.488609
+  },
+  "4915 Bathurst Street #214, Toronto, Ontario, M2R 1X9     ": {
+    "lat": 43.773109,
+    "lng": -79.442617
+  },
+  "UHN Toronto General Hospital, Department Of Medical Imaging, Toronto, Ontario, M5G 2N2     ": {
+    "lat": 43.6577,
+    "lng": -79.3894
+  },
+  "104-5927 Bathurst St, North York, ON, M2R 3T5": {
+    "lat": 43.79040022892851,
+    "lng": -79.44550458698797
+  },
+  "Unison Health & Community Services, 540 Finch Ave. W, Toronto, Ontario                       , M2R 1N7     ": {
+    "lat": 43.7728412,
+    "lng": -79.4482393
+  },
+  "North York General Hospital, Branson Ambulatory Care Centre, Toronto, Ontario, M2R 1N5     ": {
+    "lat": 43.771426,
+    "lng": -79.44728711605052
+  },
+  "Suite 101, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "Suite 210A, 305 Finch Avenue West, Willowdale, Ontario                       , M2R 1X9     ": {
+    "lat": 43.773777413661776,
+    "lng": -79.44241206655676
+  },
+  "Weston Medical Centre, 1953 Weston Road, Weston, Ontario, M9N 1W8     ": {
+    "lat": 43.7008864,
+    "lng": -79.51833865
+  },
+  "5927 Bathurst St, Suite 201, North York, ON, M2R 3T5": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "North York General Hospital, 10 Buchan Court, Toronto, Ontario, M2R 1N5     ": {
+    "lat": 43.773192,
+    "lng": -79.359286
+  },
+  "Suite 206, 840 Coxwell Avenue, Toronto, Ontario, M4C 5T2": {
+    "lat": 43.690391,
+    "lng": -79.326588
+  },
+  "130 Midland Ave, Midland Gardens LTC, Scarborough, ON, M1N 4E6": {
+    "lat": 43.7077593,
+    "lng": -79.2469846
+  },
+  "212-4949 Bathurst St, North York, ON, M2R 1Y1": {
+    "lat": 43.79040022892851,
+    "lng": -79.44550458698797
+  },
+  "Suite 212, 4949 Bathurst Street, Toronto, Ontario, M2R 1Y1     ": {
+    "lat": 43.774301,
+    "lng": -79.442578
+  },
+  "540 Finch Ave W, Unison Health & Community Services, North York, ON, M2R 1N7": {
+    "lat": 43.7728412,
+    "lng": -79.4482393
+  },
+  "Suite 403, 855 Broadview Avenue, Toronto, Ontario, M4K 3Z1     ": {
+    "lat": 43.6796048375,
+    "lng": -79.35785775
+  },
+  "4242 Dundas St W, Kingsway Medical Centre, Toronto, ON, M8X 1Y6": {
+    "lat": 43.6596864,
+    "lng": -79.5142594
+  },
+  "Discovery Family Health, 77 Provost Drive, North York, Ontario, M2K 0B7     ": {
+    "lat": 43.769291833333334,
+    "lng": -79.37071141666667
+  },
+  "Finch West Medical Clinic, Suite 106, North York, Ontario, M2R 1M6     ": {
+    "lat": 43.7543217,
+    "lng": -79.44910565950553
+  },
+  "Suite 204, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5     ": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "4949 Bathurst Street, Suite 212, Toronto, Ontario, M2R 1Y1     ": {
+    "lat": 43.774301,
+    "lng": -79.442578
+  },
+  "Unit 101, 1520 Steeles Avenue West, Vaughan, Ontario, L4K 3B9     ": {
+    "lat": 43.787614,
+    "lng": -79.471616
+  },
+  "4001 Leslie St, North York General Hospital, North York, ON, M2K 1E1": {
+    "lat": 43.7691855,
+    "lng": -79.3625797029496
+  },
+  "Suite 217, 4915 Bathurst Street, Willowdale, Ontario, M2R 1X9     ": {
+    "lat": 43.773109,
+    "lng": -79.442617
+  },
+  "North York General Hospital, Department of Diagnostic Imaging, North York, Ontario, M2K 1E1     ": {
+    "lat": 43.7543217,
+    "lng": -79.44910565950553
+  },
+  "5927 Bathurst Street, suite 204, Toronto, Ontario, M2R 3T5": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "5927 Bathurst Street, Suite 201, Toronto, Ontario, M2R 3T5": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "541 Finch Ave W, V alleyview Residence, North York, ON, M2R 3Y3": {
+    "lat": 43.77088655,
+    "lng": -79.4460879799963
+  },
+  "Department of Medical Imaging, North York General Hospital, Toronto, Ontario, M2K 1E1     ": {
+    "lat": 43.7695999,
+    "lng": -79.3642
+  },
+  "Branson Division , 555 Finch Ave West,, Toronto, Ontario, M2K 1E1     ": {
+    "lat": 43.771426,
+    "lng": -79.44728711605052
+  },
+  "Unit 1019- 4789 Yonge street, Hullmark Medical Clinic, Toronto, Ontario, M2N 0G3     ": {
+    "lat": 43.76117482857143,
+    "lng": -79.41014161428572
+  },
+  "Pure Spa, 1936 Avenue rd, Toronto, Ontario, M5M4A1      ": {
+    "lat": 43.733807368421054,
+    "lng": -79.41980207894737
+  },
+  "Suite 102, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5     ": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "Suite 101, 5927 Bathurst Street, Toronto, Ontario, M2R 3T5     ": {
+    "lat": 43.781326750000005,
+    "lng": -79.44437609596613
+  },
+  "100 - 4949 Bathurst Street, WELL Health Diagnostic Centre Northview Centre, Toronto, Ontario, M2R 1Y1": {
+    "lat": 43.76421367337683,
+    "lng": -79.44059523773043
+  },
+  "204-5915 Leslie St, North York, ON, M2H 1J8": {
+    "lat": 43.7662689,
+    "lng": -79.3629598
+  },
+  "St. Mary's General Hospital, Geriatric Medically Complex Clinic, Kitchener, Ontario, N2M 1B2     ": {
+    "lat": 43.4384055,
+    "lng": -80.5014645
+  },
+  "Chartwell Gibson LTC, 1925 Steeles Avenue East, Toronto, Ontario, M2H 2H3     ": {
+    "lat": 43.8075805,
+    "lng": -79.37400302231731
+  },
+  "Suite 208, 3570 Victoria Park Avenue, Toronto, Ontario, M2H 3S2     ": {
+    "lat": 43.806047,
+    "lng": -79.337325
+  },
+  "5935 Leslie Street, Willowdale, Ontario, M2H 1J8     ": {
+    "lat": 43.798488439162114,
+    "lng": -79.36982444151833
+  },
+  "Thornhill Family Physicians, Unit 35, Thornhill, Ontario, L4J 7Y3     ": {
+    "lat": 43.8099852,
+    "lng": -79.4521523
+  },
+  "101-250 Harding Blvd W, Richmond Hill, ON, L4C 9M7": {
+    "lat": 43.867333904541475,
+    "lng": -79.4447290343965
+  },
+  "491 Lawrence Avenue West, Midtown Pediatrics, Toronto, Ontario, M5M 1C7": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "103-8760 Jane St, Concord, ON, L4K 0E8": {
+    "lat": 43.80011,
+    "lng": -79.48291
+  },
+  "Mount Sinai Hospital, 1602 - 600 University Avenue, Toronto, Ontario, M5G 1X5     ": {
+    "lat": 43.65863225039574,
+    "lng": -79.39006631816876
+  },
+  "Cleveland Clinic Canada, 181 Bay Street, Suite 3000, Toronto, Ontario, M5J 2T3     ": {
+    "lat": 43.64717595,
+    "lng": -79.37829767852804
+  },
+  "205, 491 Lawrence Ave west, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.7232227,
+    "lng": -79.4111256
+  },
+  "491 Lawrence Avenue West, Suite 101, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "2100 Bovaird Dr E, William Osler Hospital Center, Brampton, ON, L6R 3J7": {
+    "lat": 43.7469379,
+    "lng": -79.74383437758848
+  },
+  "Toronto General Hospital, Suite 4N 508, Toronto, Ontario, M5G 2N2     ": {
+    "lat": 43.65859575,
+    "lng": -79.3881615671059
+  },
+  "South Medical Tower, Suite 228, Vancouver, British Columbia, V5Z 2M9     ": {
+    "lat": 49.2333762,
+    "lng": -123.1187569
+  },
+  "491 Lawrence Avenue West, Suite 100, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "Suite 312, 790 Bay Street, Toronto, Ontario, M5G 1N8     ": {
+    "lat": 43.660263,
+    "lng": -79.386347
+  },
+  "Suite 500, 491 Lawrence Avenue West, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "500-491 Lawrence Ave W, MS Cardiology Services, North York, ON, M5M 1C7": {
+    "lat": 43.7191806,
+    "lng": -79.4298636
+  },
+  "500-491 Lawrence Ave W, North York, ON, M5M 1C7": {
+    "lat": 43.71917620509236,
+    "lng": -79.43069585248202
+  },
+  "101-491 Lawrence Ave W, North York, ON, M5M 1C7": {
+    "lat": 43.7187815,
+    "lng": -79.4317908
+  },
+  "Suite 101, 491 Lawrence Avenue West, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "Mount Sinai Hospital, Suite 1609, Toronto, Ontario, M5G 1X5     ": {
+    "lat": 43.6574502,
+    "lng": -79.39032113692951
+  },
+  "Suite 203, 2409 Yonge street, Toronto, Ontario, M5M 1B2     ": {
+    "lat": 43.71017,
+    "lng": -79.398914
+  },
+  "491 Lawrence Ave W, Suite 101, North York, ON, M5M 1C7": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "VIRCAN Clinics, Suite 301, Richmond Hill, Ontario, L4B 3P7     ": {
+    "lat": 43.8406,
+    "lng": -79.3997
+  },
+  "DermAtelier on Avenue, 1896 Avenue Road, Toronto, ON, M5M 3Z8": {
+    "lat": 43.73264253,
+    "lng": -79.41960908
+  },
+  "250 Harding Boulevard West, Suite 404, Richmond Hill, Ontario, L4C 9M7": {
+    "lat": 43.868394,
+    "lng": -79.4485105
+  },
+  "272 Lawrence Avenue West, Suite 205, Toronto, Ontario, M5M 4M1     ": {
+    "lat": 43.722839,
+    "lng": -79.41427445689655
+  },
+  "Avenue plastic surgery, 1802 Avenue Road, Toronto, Ontario, M5M 3Z1     ": {
+    "lat": 43.730339,
+    "lng": -79.419398
+  },
+  "University Health Network, Toronto General Hospital, Toronto, Ontario, M5G 2C4     ": {
+    "lat": 43.6586205,
+    "lng": -79.38832295
+  },
+  "362 Fairlawn Avenue, Office, Toronto, Ontario, M5M 1T6": {
+    "lat": 43.728252,
+    "lng": -79.417369
+  },
+  "200 Elizabeth Street, Toronto General Hospital, Toronto, Ontario, M5G 2C4": {
+    "lat": 43.65859575,
+    "lng": -79.3881615671059
+  },
+  "Toronto Western Hospital, 5MC 420 C, Toronto, Ontario, M5T 2S8     ": {
+    "lat": 43.65316,
+    "lng": -79.404664
+  },
+  "Sunnybrook Health Sciences Ctre, Division of Plastic Surgery, Toronto, Ontario, M4N 3M5     ": {
+    "lat": 43.724013,
+    "lng": -79.367902
+  },
+  "Suite 101, 491 Lawrence Avenue West, Toronto, Ontario                       , M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "Mount Sinai Hospital, Department of Cardiology, Toronto, Ontario, M5G 1X5     ": {
+    "lat": 43.6574502,
+    "lng": -79.39032113692951
+  },
+  "Toronto General Hospital, 11Th Floor, Toronto, Ontario, M5G 2N2     ": {
+    "lat": 43.659695,
+    "lng": -79.38647
+  },
+  "Mount Sinai Hospital, Suite 1604, Toronto, Ontario, M5G 1X5     ": {
+    "lat": 43.6574502,
+    "lng": -79.39032113692951
+  },
+  "Hamilton Health Sciences, 237 Barton Street East, Hamilton, Ontario, L8L 2X2     ": {
+    "lat": 43.26231265,
+    "lng": -79.85543245514329
+  },
+  "Suite 101, 491 Lawrence Avenue, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "600 University Avenue, Suite 4-230, Toronto, Ontario, M5G 1X5": {
+    "lat": 43.65756765,
+    "lng": -79.3903496301727
+  },
+  "Doctors Office Toronto, Suite 101, Toronto, Ontario, M5M 1C7     ": {
+    "lat": 43.65194795,
+    "lng": -79.37039834348687
+  },
+  "Suite 101, 491 Lawrence Ave W, North York, Ontario, M5M 1C7     ": {
+    "lat": 43.719078,
+    "lng": -79.429082
+  },
+  "59-2720 North Park Dr, Castlemore Pediatric Clinic, Brampton, ON, L6S 0E9": {
+    "lat": 43.75899,
+    "lng": -79.717183
+  },
+  "240 Duncan Mill Road, Kidcrew Medical, Toronto, Ontario, M3B 3S6": {
+    "lat": 43.76187,
+    "lng": -79.352099
+  },
+  "9080 Yonge Street, Unit 12, Richmond Hill, Ontario, L4C 0Y7": {
+    "lat": 43.848843,
+    "lng": -79.431828
+  },
+  "Telemed MD, 2200 Dundas St E, Mississauga, ON, L4X 2V3": {
+    "lat": 43.6267,
+    "lng": -79.564546
+  },
+  "The Wharton Medical Clinic, 2951 Walker's Line, Burlington, ON, L7M 4Y1": {
+    "lat": 43.392138,
+    "lng": -79.821655
+  },
+  "East York Medical Centre, Suite 27E, Toronto, Ontario, M4H 1C3     ": {
+    "lat": 43.7060609,
+    "lng": -79.3451843
+  },
+  "unit 200-51a Underhill Drive, Toronto, Ontario, M3A 2J8": {
+    "lat": 43.744082815293524,
+    "lng": -79.32609740686225
+  },
+  "1252 Lawrence Ave E, unit 2, North York, ON, M3A 1C3": {
+    "lat": 43.741484,
+    "lng": -79.318366
+  },
+  "1252 Lawrence Ave E, Victoria Medical Group, North York, ON, M3A 1C3": {
+    "lat": 43.741484,
+    "lng": -79.318366
+  },
+  "Unit 130 , 5 Park Home Ave., North York, Ontario, M3A 1Z4     ": {
+    "lat": 43.7690451375,
+    "lng": -79.41327508124999
+  },
+  "The Scarborough General  Hospital, 3050 Lawrence Avenue East, Scarborough, Ontario, M1P 2V5     ": {
+    "lat": 43.755637,
+    "lng": -79.24596
+  },
+  "Division of Emergency Medicine, William Osler Health System, Brampton, Ontario, L6R 3J7     ": {
+    "lat": 43.7470742,
+    "lng": -79.74352345
+  },
+  "51a Underhill Drive, unit 200, Toronto, Ontario, M3A 2J8": {
+    "lat": 43.7450285,
+    "lng": -79.3255619
+  },
+  "21 Queensway W., Suite 110, Mississauga, Ontario, L5B 1B6     ": {
+    "lat": 43.57396205,
+    "lng": -79.60831719079252
+  },
+  "201-1252 Lawrence Ave E, North York, ON, M3A 1C3": {
+    "lat": 43.727529,
+    "lng": -79.381956
+  },
+  "The Doctors Office, Royal Bank Plaza Medical Centre, Toronto, Ontario                       , M5J 2J3     ": {
+    "lat": 43.609261,
+    "lng": -79.749318
+  },
+  "Suite 412, 1371 Neilson Road, Scarborough, Ontario, M1B 4Z8     ": {
+    "lat": 43.8092341,
+    "lng": -79.2212397
+  },
+  "51a Underhill Drive, Suite 200, Toronto, Ontario, M3A 2J8": {
+    "lat": 43.7450285,
+    "lng": -79.3255619
+  },
+  "Parkwood Medical Centre, Unit F1-1, Toronto, Ontario, M3A 1Z4     ": {
+    "lat": 43.7611,
+    "lng": -79.3258
+  },
+  "10 Lower Jarvis Street, Primacy Queens Quay Family Health, Toronto, Ontario, M5L 1G4": {
+    "lat": 43.644435,
+    "lng": -79.370078
+  },
+  "511-220 Duncan Mill Road, 511-220 Duncan Mill Rd., Toronto, Ontario, M3A 3R6": {
+    "lat": 43.76161347260256,
+    "lng": -79.3559172023364
+  },
+  "302 Sheppard Avenue West, GetSkinHelp, Toronto, Ontario                       , M2N 1N5     ": {
+    "lat": 43.758472499999996,
+    "lng": -79.42577341872088
+  },
+  "439 Sherbourne St, Fudger House Long Term Care, Toronto, ON, M4X 1K6": {
+    "lat": 43.6661333,
+    "lng": -79.3736614
+  },
+  "209-1262 Don Mills Rd, North York, ON, M3B 2W7": {
+    "lat": 43.74558025,
+    "lng": -79.34559995
+  },
+  "Suite 812, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "600 Sherbourne St., Suite 303, Toronto, Ontario, M4X 1W4": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Rosedale Medical Centre, Suite  709, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6716599,
+    "lng": -79.37683666618553
+  },
+  "Paediatric Consult Clinic, 3rd Floor Our lady of Mercy Wing, Toronto, Ontario, M6R 1B5     ": {
+    "lat": 43.6392,
+    "lng": -79.4506
+  },
+  "600 Sherbourne Street, Toronto, Ontario, M4X 1W4": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "101-2727 Yonge St, Toronto, ON, M4N 3R6": {
+    "lat": 43.721501849999996,
+    "lng": -79.40147295
+  },
+  "600 Sherbourne Street, DR.E. PAPADOURIS, Toronto, Ontario, M4X 1W4": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Suite 501, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Rosedale Medical Centre, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6716599,
+    "lng": -79.37683666618553
+  },
+  "103-595 Parliament Street, City Family Doctor Clinic, Toronto, Ontario, M4X 1P9": {
+    "lat": 43.666609639,
+    "lng": -79.368915838
+  },
+  "705-600 Sherbourne St, Toronto, ON, M4X 1W4": {
+    "lat": 43.67008385756395,
+    "lng": -79.37592881281387
+  },
+  "303-600 Sherbourne Street, Toronto, Ontario, M4X 1W4": {
+    "lat": 43.661032,
+    "lng": -79.3720186
+  },
+  "M4X 1X8, Toronto, Ontario, M4X 1X8     ": {
+    "lat": 43.6673,
+    "lng": -79.3727
+  },
+  "507-600 Sherbourne Street, Toronto, Ontario, M4X 1W4": {
+    "lat": 43.6682107,
+    "lng": -79.3752174
+  },
+  "Suite 601, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Suite 803, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Suite 402, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "5-225 Wellesley St E, Toronto, ON, M4X 1X8": {
+    "lat": 43.66718108695566,
+    "lng": -79.37421367315082
+  },
+  "600 Sherbourne Street, Rapson Pain Clinic, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6716599,
+    "lng": -79.37683666618553
+  },
+  "301-607 Gerrard St E, Broadon Clinic, Toronto, ON, M4M 1Y2": {
+    "lat": 43.664537599999996,
+    "lng": -79.3562478
+  },
+  "415-600 Sherbourne St, Toronto, ON, M4X 1W4": {
+    "lat": 43.66509802666667,
+    "lng": -79.37370695333333
+  },
+  "The Hospital for Sick Children, Department of Pediatric Critical, Toronto, Ontario, M5G 1X8     ": {
+    "lat": 43.6575,
+    "lng": -79.3893
+  },
+  "20 Wynford Dr, Suite 308, North York, ON, M3C 1J4": {
+    "lat": 43.723704,
+    "lng": -79.336089
+  },
+  "802-600 Sherbourne St, Toronto, ON, M4X 1W4": {
+    "lat": 43.67008385756395,
+    "lng": -79.37592881281387
+  },
+  "Rosedale Medical Center, Suite 405, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.668284,
+    "lng": -79.366087
+  },
+  "Suite 711, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Trillium Health Centre, 100 Queensway West, Mississauga, Ontario, L5B 1B8     ": {
+    "lat": 43.5719262,
+    "lng": -79.60808433976982
+  },
+  "701-600 Sherbourne St, Toronto, ON, M4X 1W4": {
+    "lat": 43.67153185,
+    "lng": -79.3765196
+  },
+  "600 Sherbourne Street, Suite 712, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "710-600 Sherbourne St, Toronto, ON, M4X 1W4": {
+    "lat": 43.67153185,
+    "lng": -79.3765196
+  },
+  "4800 Leslie Street, Toronto, Ontario, M2J 2K9": {
+    "lat": 43.7793751,
+    "lng": -79.3657385
+  },
+  "600 Sherbourne Street, Suite 801, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "City Family Doctor Clinic Unit 103 , Unit 103 595 Parliament St, Toronto, Ontario, M4X1P9      ": {
+    "lat": 43.667739,
+    "lng": -79.369184
+  },
+  "2075 Bayview Ave, Sunnybrook Health Sciences Centre, Toronto, ON, M4N 3M5": {
+    "lat": 43.7220178,
+    "lng": -79.3722543
+  },
+  "5668 Main St, Rosedale Centre for Plastic Surgery, Niagara Falls, ON, L2G 5Z4": {
+    "lat": 43.0924269,
+    "lng": -79.0922616
+  },
+  "Suite 508, 600 Sherbourne Street, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Suite 308, 600 Sherbourne St., Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Road to Recovery - Barrie, Unit 3, Barrie, Ontario, L4N 2C4     ": {
+    "lat": 44.38264648333333,
+    "lng": -79.7042411
+  },
+  "600 Sherbourne Street, Suit No 308, Toronto, Ontario, M4X 1W4     ": {
+    "lat": 43.6715802,
+    "lng": -79.3767448
+  },
+  "Heritage Nursing Home, 1195 Queen St. E., Toronto, Ontario, M4M 1L6     ": {
+    "lat": 43.66292,
+    "lng": -79.331216
+  }
 }

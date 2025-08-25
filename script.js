@@ -272,46 +272,11 @@ async function handleSearch(e) {
             return;
         }
         
-        // Calculate distances and filter - with caching, this is now safe
-        const doctorsWithDistance = [];
-        let geocodeCount = 0;
+        // Use batch geocoding for all doctors
+        const enrichedDoctors = await enrichDoctorsWithDistance(allDoctorsResults, userCoordinates, maxDistance);
         
-        for (const doctor of allDoctorsResults) {
-            const doctorCoords = await getCoordinatesFromAddress(doctor.address);
-            geocodeCount++;
-            
-            // Show progress every 10 doctors
-            if (geocodeCount % 10 === 0) {
-                console.log(`Processed ${geocodeCount}/${allDoctorsResults.length} doctors...`);
-            }
-            
-            if (doctorCoords) {
-                const distance = calculateDistance(
-                    userCoordinates.lat,
-                    userCoordinates.lng,
-                    doctorCoords.lat,
-                    doctorCoords.lng
-                );
-                
-                // Only include doctors within the actual radius
-                if (distance <= maxDistance) {
-                    doctor.coordinates = doctorCoords;
-                    doctor.distance = Math.round(distance * 10) / 10; // Round to 1 decimal place
-                    doctorsWithDistance.push(doctor);
-                }
-            } else {
-                // If we can't geocode, include anyway but without distance
-                doctor.distance = null;
-                doctorsWithDistance.push(doctor);
-            }
-        }
-        
-        // Sort by distance (doctors without distance go to the end)
-        doctorsWithDistance.sort((a, b) => {
-            if (a.distance === null) return 1;
-            if (b.distance === null) return -1;
-            return a.distance - b.distance;
-        });
+        // enrichDoctorsWithDistance already filters by distance, so just use the results
+        const doctorsWithDistance = enrichedDoctors;
         
         console.log(`${doctorsWithDistance.length} doctors within ${maxDistance}km`);
         
@@ -348,6 +313,12 @@ function parseJSONResults(data) {
     console.log('Parsing JSON response, total count:', data.totalcount);
     
     if (data.results && Array.isArray(data.results)) {
+        // Log the first result to see available fields
+        if (data.results.length > 0) {
+            console.log('Sample doctor data:', data.results[0]);
+            console.log('Phone number field:', data.results[0].phonenumber);
+        }
+        
         data.results.forEach(result => {
             const doctor = {
                 name: result.name || 'Unknown',
@@ -359,7 +330,7 @@ function parseJSONResults(data) {
                     result.province,
                     result.postalcode
                 ].filter(Boolean).join(', '),
-                phone: result.phone || '',
+                phone: result.phonenumber || '',
                 languages: result.languages || 'English',
                 status: result.status || 'Active',
                 cpsoNumber: result.cpsonumber || ''
@@ -479,8 +450,63 @@ function getCurrentLocation() {
 }
 
 async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
+    // Collect all unique addresses
+    const uniqueAddresses = [...new Set(doctors.map(d => d.address))];
+    
+    // Filter addresses that aren't already cached
+    const uncachedAddresses = uniqueAddresses.filter(addr => !geocodeCache[addr]);
+    
+    // Batch geocode all uncached addresses if any
+    if (uncachedAddresses.length > 0) {
+        console.log(`Batch geocoding ${uncachedAddresses.length} uncached addresses...`);
+        
+        try {
+            const response = await fetch('/api/batch-geocode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ addresses: uncachedAddresses })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const results = data.results;
+                
+                // Update the geocode cache with batch results
+                for (const [address, coords] of Object.entries(results)) {
+                    if (coords) {
+                        geocodeCache[address] = coords;
+                    }
+                }
+                
+                console.log(`Batch geocoding complete. Geocoded ${Object.keys(results).filter(k => results[k] !== null).length} addresses`);
+                console.log(`Total cached addresses: ${Object.keys(geocodeCache).length}`);
+            } else {
+                console.error('Batch geocoding failed, falling back to individual geocoding');
+                // Fall back to individual geocoding if batch fails
+                for (const address of uncachedAddresses) {
+                    const coords = await getCoordinatesFromAddress(address);
+                    if (coords) {
+                        geocodeCache[address] = coords;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Batch geocoding error:', error);
+            // Fall back to individual geocoding on error
+            for (const address of uncachedAddresses) {
+                const coords = await getCoordinatesFromAddress(address);
+                if (coords) {
+                    geocodeCache[address] = coords;
+                }
+            }
+        }
+    }
+    
+    // Now calculate distances using cached coordinates
     for (const doctor of doctors) {
-        const doctorCoords = await getCoordinatesFromAddress(doctor.address);
+        const doctorCoords = geocodeCache[doctor.address];
         
         if (doctorCoords) {
             doctor.coordinates = doctorCoords;
@@ -501,7 +527,12 @@ async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
         return a.distance - b.distance;
     });
     
-    return doctors.filter(d => d.distance === null || d.distance <= maxDistance);
+    const withCoords = doctors.filter(d => d.distance !== null).length;
+    const withinRange = doctors.filter(d => d.distance !== null && d.distance <= maxDistance).length;
+    console.log(`Geocoding results: ${withCoords} doctors with coordinates, ${withinRange} within ${maxDistance}km range`);
+    
+    // Only return doctors that have valid coordinates and are within range
+    return doctors.filter(d => d.distance !== null && d.distance <= maxDistance);
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -567,6 +598,12 @@ function displayResults(doctors) {
                     <span class="info-label">Address:</span>
                     <span>${doctor.address}</span>
                 </div>
+                ${doctor.distance !== null && doctor.distance !== undefined ? `
+                <div class="info-row">
+                    <span class="info-label">Distance:</span>
+                    <span>${doctor.distance} km</span>
+                </div>
+                ` : ''}
                 <div class="info-row">
                     <span class="info-label">Phone:</span>
                     <span>${doctor.phone}</span>
@@ -726,6 +763,93 @@ function displayPostalCodes(postalCodes) {
         ).join(' ');
     } else {
         postalCodesSection.style.display = 'none';
+    }
+}
+
+// Batch geocode all addresses that don't have coordinates
+async function batchGeocodeAddresses() {
+    const batchBtn = document.getElementById('batchGeocodeBtn');
+    const batchStatus = document.getElementById('batchStatus');
+    
+    if (!allDoctors || allDoctors.length === 0) {
+        batchStatus.textContent = 'Please search for doctors first';
+        return;
+    }
+    
+    // Collect all unique addresses
+    const uniqueAddresses = [...new Set(allDoctors.map(d => d.address))];
+    
+    // Filter addresses that don't have coordinates yet
+    const addressesToGeocode = [];
+    for (const address of uniqueAddresses) {
+        const coords = geocodeCache[address];
+        if (!coords) {
+            addressesToGeocode.push(address);
+        }
+    }
+    
+    if (addressesToGeocode.length === 0) {
+        batchStatus.textContent = 'All addresses already have coordinates!';
+        return;
+    }
+    
+    batchBtn.disabled = true;
+    batchStatus.textContent = `Geocoding ${addressesToGeocode.length} addresses...`;
+    
+    try {
+        const response = await fetch('/api/batch-geocode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ addresses: addressesToGeocode })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Batch geocoding failed');
+        }
+        
+        const data = await response.json();
+        const results = data.results;
+        
+        // Update the geocode cache
+        let successCount = 0;
+        for (const [address, coords] of Object.entries(results)) {
+            if (coords) {
+                geocodeCache[address] = coords;
+                successCount++;
+            }
+        }
+        
+        batchStatus.textContent = `Geocoded ${successCount} of ${addressesToGeocode.length} addresses`;
+        
+        // Re-enrich doctors with the new coordinates
+        if (userCoordinates && allDoctors.length > 0) {
+            const maxDistance = parseFloat(document.getElementById('maxDistance').value) || 5;
+            const enrichedDoctors = await enrichDoctorsWithDistance(allDoctors, userCoordinates, maxDistance);
+            displayResults(enrichedDoctors);
+            checkBatchGeocoding();
+        }
+        
+    } catch (error) {
+        console.error('Batch geocoding error:', error);
+        batchStatus.textContent = error.message.includes('API key') ? 
+            'Set GEOAPIFY_API_KEY environment variable first' : 
+            `Error: ${error.message}`;
+    } finally {
+        batchBtn.disabled = false;
+    }
+}
+
+// Check if batch geocoding is available and show the section
+async function checkBatchGeocoding() {
+    // Show the batch geocoding section if we have doctors with missing coordinates
+    if (allDoctors && allDoctors.length > 0) {
+        const hasNullCoordinates = allDoctors.some(d => !geocodeCache[d.address]);
+        if (hasNullCoordinates) {
+            document.getElementById('batchGeocodeSection').style.display = 'block';
+        }
     }
 }
 
