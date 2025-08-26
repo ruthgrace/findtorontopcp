@@ -166,6 +166,21 @@ async function selectAddress(suggestion) {
     addressSearchInput.value = suggestion.address;
     hideSuggestions();
     
+    // Check if this address is already cached
+    if (geocodeCache[suggestion.address]) {
+        console.log('Using cached coordinates for user address:', suggestion.address);
+        const cachedCoords = geocodeCache[suggestion.address];
+        selectedLatInput.value = cachedCoords.lat;
+        selectedLngInput.value = cachedCoords.lng;
+        userCoordinates = { lat: cachedCoords.lat, lng: cachedCoords.lng };
+        
+        // Find and display postal codes within radius
+        const radiusKm = parseFloat(maxDistanceInput.value) || 5;
+        const postalCodesInRadius = findPostalCodesWithinRadius(userCoordinates.lat, userCoordinates.lng, radiusKm);
+        displayPostalCodes(postalCodesInRadius);
+        return;
+    }
+    
     try {
         const response = await fetch(`/api/geocode?keyString=${encodeURIComponent(suggestion.keyString)}`);
         const data = await response.json();
@@ -175,6 +190,10 @@ async function selectAddress(suggestion) {
             selectedLatInput.value = location.y;
             selectedLngInput.value = location.x;
             userCoordinates = { lat: location.y, lng: location.x };
+            
+            // Cache the user address coordinates
+            geocodeCache[suggestion.address] = { lat: location.y, lng: location.x };
+            console.log('Cached user address:', suggestion.address);
             
             // Find and display postal codes within radius
             const radiusKm = parseFloat(maxDistanceInput.value) || 5;

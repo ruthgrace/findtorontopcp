@@ -104,6 +104,26 @@ app.get('/api/geocode', async (req, res) => {
             score: row.SCORE
         })) || [];
         
+        // Cache the top candidate (user selected address) in database
+        if (candidates.length > 0 && candidates[0].location) {
+            const topCandidate = candidates[0];
+            const coords = {
+                lat: topCandidate.location.y,
+                lng: topCandidate.location.x
+            };
+            
+            // Save to memory cache
+            geocodeCache[topCandidate.address] = coords;
+            
+            // Save to database
+            if (dbInitialized) {
+                db.saveGeocoding(topCandidate.address, coords.lat, coords.lng, 'toronto-geocoder').catch(err => {
+                    console.error('Error saving user address to database:', err);
+                });
+                console.log('Cached user search address:', topCandidate.address);
+            }
+        }
+        
         res.json({ candidates });
     } catch (error) {
         console.error('Error geocoding address:', error);
