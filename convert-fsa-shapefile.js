@@ -31,7 +31,7 @@ function reprojectGeometry(geometry, fromProj, toProj) {
 
 async function convertFSAShapefileToGeoJSON() {
     try {
-        console.log('Converting FSA shapefile to GeoJSON with projection transformation...');
+        console.log('Converting GTA FSA shapefile to GeoJSON with projection transformation...');
         
         // Define the projection transformation
         // From: NAD83 / Statistics Canada Lambert
@@ -42,7 +42,7 @@ async function convertFSAShapefileToGeoJSON() {
         const shapefilePath = path.join(__dirname, 'postcode_geodata/lfsa000b21a_e/lfsa000b21a_e.shp');
         
         const features = [];
-        let torontoCount = 0;
+        let gtaCount = 0;
         let totalCount = 0;
         
         await shapefile.open(shapefilePath)
@@ -52,15 +52,28 @@ async function convertFSAShapefileToGeoJSON() {
                     
                     totalCount++;
                     
-                    // Filter for Toronto FSAs (starting with M) and Ontario
+                    // Filter for GTA FSAs (M for Toronto, L0-L7 for surrounding regions) and Ontario
                     if (result.value.properties && 
                         result.value.properties.CFSAUID && 
-                        result.value.properties.CFSAUID.startsWith('M') &&
                         result.value.properties.PRNAME && 
                         result.value.properties.PRNAME.includes('Ontario')) {
                         
-                        torontoCount++;
-                        console.log(`Found Toronto FSA: ${result.value.properties.CFSAUID}`);
+                        const fsa = result.value.properties.CFSAUID;
+                        // Include: M (Toronto), L0 (rural GTA), L1 (Durham), L3-L4 (York), 
+                        // L5-L6 (Peel), L7 (Halton)
+                        const isGTA = fsa.startsWith('M') || 
+                                     fsa.startsWith('L0') ||
+                                     fsa.startsWith('L1') ||
+                                     fsa.startsWith('L3') ||
+                                     fsa.startsWith('L4') ||
+                                     fsa.startsWith('L5') ||
+                                     fsa.startsWith('L6') ||
+                                     fsa.startsWith('L7');
+                        
+                        if (!isGTA) return source.read().then(log);
+                        
+                        gtaCount++;
+                        console.log(`Found GTA FSA: ${result.value.properties.CFSAUID}`);
                         
                         // Reproject the geometry from Statistics Canada Lambert to WGS84
                         const reprojectedGeometry = reprojectGeometry(result.value.geometry, fromProj, toProj);
@@ -86,23 +99,23 @@ async function convertFSAShapefileToGeoJSON() {
         
         // Write the full GeoJSON file
         fs.writeFileSync(
-            path.join(__dirname, 'toronto-fsa-boundaries.json'),
+            path.join(__dirname, 'gta-fsa-boundaries.json'),
             JSON.stringify(geojson, null, 2)
         );
         
-        console.log(`\nConverted ${torontoCount} Toronto FSAs from ${totalCount} total records`);
-        console.log('Output file: toronto-fsa-boundaries.json');
+        console.log(`\nConverted ${gtaCount} GTA FSAs from ${totalCount} total records`);
+        console.log('Output file: gta-fsa-boundaries.json');
         
         // Also create a minified version for production
         fs.writeFileSync(
-            path.join(__dirname, 'toronto-fsa-boundaries.min.json'),
+            path.join(__dirname, 'gta-fsa-boundaries.min.json'),
             JSON.stringify(geojson)
         );
         
-        console.log('Created minified version: toronto-fsa-boundaries.min.json');
+        console.log('Created minified version: gta-fsa-boundaries.min.json');
         
         // List all FSAs found
-        console.log('\nToronto FSAs found:');
+        console.log('\nGTA FSAs found:');
         features.forEach(f => console.log(`  ${f.properties.fsa} - Land area: ${f.properties.landArea} km²`));
         
     } catch (error) {

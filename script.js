@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsContainer = document.getElementById('resultsContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
     
-    // Load Toronto postal codes and boundaries
-    loadTorontoPostalCodes();
+    // Load GTA postal codes and boundaries
+    loadGTAPostalCodes();
     loadFSABoundaries();
     
     searchForm.addEventListener('submit', handleSearch);
@@ -253,6 +253,7 @@ async function handleSearch(e) {
         // Process postal codes in batches to avoid overwhelming the server
         for (const pc of postalCodesInRadius) {
             try {
+                // First try a regular search
                 const searchParams = new URLSearchParams();
                 if (includeInactive) searchParams.append('cbx-includeinactive', includeInactive);
                 searchParams.append('postalCode', pc.code.replace(' ', '+'));
@@ -270,15 +271,44 @@ async function handleSearch(e) {
                 if (response.ok) {
                     const responseText = await response.text();
                     let doctors = [];
+                    let needsSmartSearch = false;
                     
                     // Check if response is JSON or HTML
                     if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
                         // It's JSON
                         const data = JSON.parse(responseText);
-                        doctors = parseJSONResults(data);
+                        
+                        // Check if we got too many results (-1)
+                        if (data.totalcount === -1) {
+                            console.log(`Too many results for ${pc.code}, using smart search...`);
+                            needsSmartSearch = true;
+                        } else {
+                            doctors = parseJSONResults(data);
+                        }
                     } else {
                         // It's HTML
                         doctors = parseSearchResults(responseText);
+                    }
+                    
+                    // If we need smart search, use the new endpoint
+                    if (needsSmartSearch) {
+                        const smartResponse = await fetch('/api/smart-search', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                postalCode: pc.code,
+                                doctorType: doctorType,
+                                language: language
+                            })
+                        });
+                        
+                        if (smartResponse.ok) {
+                            const smartData = await smartResponse.json();
+                            doctors = parseJSONResults(smartData);
+                            console.log(`Smart search found ${doctors.length} doctors in ${pc.code}`);
+                        }
                     }
                     
                     if (doctors.length > 0) {
@@ -289,7 +319,7 @@ async function handleSearch(e) {
                         
                         allDoctorsResults.push(...doctors);
                     } else {
-                        console.warn(`No doctors found for postal code ${pc.code}`);
+                        console.log(`No doctors found for postal code ${pc.code}`);
                     }
                 }
             } catch (error) {
@@ -648,11 +678,17 @@ function showLoading(show) {
     }
 }
 
-async function loadTorontoPostalCodes() {
+async function loadGTAPostalCodes() {
     try {
-        const response = await fetch('/toronto-postal-codes.json');
+        // Try to load GTA postal codes first, fall back to Toronto-only if not found
+        let response = await fetch('/gta-postal-codes.json');
+        if (!response.ok) {
+            console.log('GTA postal codes not found, falling back to Toronto postal codes');
+            response = await fetch('/toronto-postal-codes.json');
+        }
         const data = await response.json();
         torontoPostalCodes = data.postalCodes;
+        console.log(`Loaded ${torontoPostalCodes.length} postal codes`);
     } catch (error) {
         console.error('Error loading postal codes:', error);
     }
@@ -660,9 +696,15 @@ async function loadTorontoPostalCodes() {
 
 async function loadFSABoundaries() {
     try {
-        const response = await fetch('/toronto-fsa-boundaries.min.json');
+        // Try to load GTA FSA boundaries first, fall back to Toronto-only if not found
+        let response = await fetch('/gta-fsa-boundaries.min.json');
+        if (!response.ok) {
+            console.log('GTA FSA boundaries not found, falling back to Toronto FSA boundaries');
+            response = await fetch('/toronto-fsa-boundaries.min.json');
+        }
         const data = await response.json();
         fsaBoundaries = data;
+        console.log(`Loaded ${fsaBoundaries.features.length} FSA boundaries`);
     } catch (error) {
         console.error('Error loading FSA boundaries:', error);
     }
@@ -671,7 +713,7 @@ async function loadFSABoundaries() {
 function findPostalCodesWithinRadius(centerLat, centerLng, radiusKm) {
     console.log('Finding postal codes within radius:', { centerLat, centerLng, radiusKm });
     console.log('FSA boundaries loaded?', fsaBoundaries ? 'Yes' : 'No');
-    console.log('Toronto postal codes loaded?', torontoPostalCodes.length > 0 ? `Yes (${torontoPostalCodes.length} codes)` : 'No');
+    console.log('GTA postal codes loaded?', torontoPostalCodes.length > 0 ? `Yes (${torontoPostalCodes.length} codes)` : 'No');
     
     if (!fsaBoundaries) {
         console.log('Using fallback center point method - FSA boundaries not loaded');

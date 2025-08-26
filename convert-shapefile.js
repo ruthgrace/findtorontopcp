@@ -15,9 +15,19 @@ async function convertShapefileToGeoJSON() {
                 .then(function log(result) {
                     if (result.done) return;
                     
-                    // Filter for Toronto postal codes (starting with M)
-                    if (result.value.properties && result.value.properties.PCNAME && 
-                        result.value.properties.PCNAME.startsWith('M')) {
+                    // Filter for GTA postal codes (M for Toronto, L0-L7 for surrounding regions)
+                    if (result.value.properties && result.value.properties.PCNAME) {
+                        const pc = result.value.properties.PCNAME;
+                        const isGTA = pc.startsWith('M') || 
+                                     pc.startsWith('L0') ||
+                                     pc.startsWith('L1') ||
+                                     pc.startsWith('L3') ||
+                                     pc.startsWith('L4') ||
+                                     pc.startsWith('L5') ||
+                                     pc.startsWith('L6') ||
+                                     pc.startsWith('L7');
+                        
+                        if (!isGTA) return source.read().then(log);
                         features.push({
                             type: 'Feature',
                             properties: {
@@ -38,12 +48,12 @@ async function convertShapefileToGeoJSON() {
         
         // Write the GeoJSON file
         fs.writeFileSync(
-            path.join(__dirname, 'toronto-postal-boundaries.json'),
+            path.join(__dirname, 'gta-postal-boundaries.json'),
             JSON.stringify(geojson, null, 2)
         );
         
-        console.log(`Converted ${features.length} Toronto postal codes to GeoJSON`);
-        console.log('Output file: toronto-postal-boundaries.json');
+        console.log(`Converted ${features.length} GTA postal codes to GeoJSON`);
+        console.log('Output file: gta-postal-boundaries.json');
         
         // Also create a simplified version with just essential data for faster loading
         const simplified = {
@@ -58,11 +68,11 @@ async function convertShapefileToGeoJSON() {
         };
         
         fs.writeFileSync(
-            path.join(__dirname, 'toronto-postal-boundaries-simplified.json'),
+            path.join(__dirname, 'gta-postal-boundaries-simplified.json'),
             JSON.stringify(simplified)
         );
         
-        console.log('Also created simplified version: toronto-postal-boundaries-simplified.json');
+        console.log('Also created simplified version: gta-postal-boundaries-simplified.json');
         
     } catch (error) {
         console.error('Error converting shapefile:', error);

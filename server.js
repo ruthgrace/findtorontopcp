@@ -131,9 +131,88 @@ app.get('/api/geocode', async (req, res) => {
     }
 });
 
+// Smart search endpoint that handles >100 results by expanding postal codes
+app.post('/api/smart-search', async (req, res) => {
+    try {
+        const { postalCode, doctorType, language } = req.body;
+        console.log('Smart search for:', postalCode);
+        
+        const allDoctors = [];
+        const postalCodesToSearch = [postalCode];
+        const searchedCodes = new Set();
+        
+        while (postalCodesToSearch.length > 0) {
+            const code = postalCodesToSearch.shift();
+            
+            if (searchedCodes.has(code)) continue;
+            searchedCodes.add(code);
+            
+            const searchParams = new URLSearchParams();
+            searchParams.append('postalCode', code);
+            searchParams.append('doctorType', doctorType || 'Any');
+            searchParams.append('LanguagesSelected', language || 'ENGLISH');
+            
+            console.log(`  Searching: ${code}`);
+            
+            const response = await fetch('https://register.cpso.on.ca/Get-Search-Results/', {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'x-requested-with': 'XMLHttpRequest'
+                },
+                body: searchParams.toString()
+            });
+            
+            const data = await response.json();
+            
+            if (data.totalcount === -1) {
+                // Too many results, expand the postal code
+                console.log(`    Too many results for ${code}, expanding...`);
+                const expanded = expandPostalCode(code);
+                postalCodesToSearch.push(...expanded);
+            } else if (data.totalcount > 0) {
+                console.log(`    Found ${data.totalcount} doctors in ${code}`);
+                allDoctors.push(...data.results);
+            }
+        }
+        
+        res.json({ totalcount: allDoctors.length, results: allDoctors });
+    } catch (error) {
+        console.error('Smart search error:', error);
+        res.status(500).json({ error: 'Smart search failed' });
+    }
+});
+
+// Helper function to expand postal codes
+function expandPostalCode(code) {
+    const expanded = [];
+    const cleanCode = code.replace(/\s+/g, '');
+    
+    if (cleanCode.length === 3) {
+        // Add 4th digit (0-9)
+        for (let i = 0; i <= 9; i++) {
+            expanded.push(`${cleanCode} ${i}`);
+        }
+    } else if (cleanCode.length === 4) {
+        // Add 5th letter (skip D,F,I,O,Q,U per Canadian postal code rules)
+        const letters = 'ABCEGHJKLMNPRSTVWXYZ';
+        for (const letter of letters) {
+            expanded.push(`${cleanCode.slice(0, 3)} ${cleanCode[3]}${letter}`);
+        }
+    } else if (cleanCode.length === 5) {
+        // Add 6th digit (0-9)
+        for (let i = 0; i <= 9; i++) {
+            expanded.push(`${cleanCode.slice(0, 3)} ${cleanCode.slice(3)}${i}`);
+        }
+    }
+    
+    return expanded;
+}
+
 app.post('/api/search', async (req, res) => {
     try {
         const searchParams = new URLSearchParams(req.body);
+        console.log('CPSO API Request:', searchParams.toString());
         
         const response = await fetch('https://register.cpso.on.ca/Get-Search-Results/', {
             method: 'POST',
@@ -149,6 +228,9 @@ app.post('/api/search', async (req, res) => {
         });
 
         const html = await response.text();
+        console.log('CPSO API Response status:', response.status);
+        console.log('CPSO API Response length:', html.length);
+        console.log('CPSO API Response sample:', html.substring(0, 500));
         res.send(html);
     } catch (error) {
         console.error('API Error:', error);
