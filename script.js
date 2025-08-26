@@ -475,52 +475,18 @@ async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
     // Filter addresses that aren't already cached
     const uncachedAddresses = uniqueAddresses.filter(addr => !geocodeCache[addr]);
     
-    // Batch geocode all uncached addresses if any
+    // Geocode all uncached addresses individually
     if (uncachedAddresses.length > 0) {
-        console.log(`Batch geocoding ${uncachedAddresses.length} uncached addresses...`);
+        console.log(`Geocoding ${uncachedAddresses.length} uncached addresses...`);
         
-        try {
-            const response = await fetch('/api/batch-geocode', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ addresses: uncachedAddresses })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                const results = data.results;
-                
-                // Update the geocode cache with batch results
-                for (const [address, coords] of Object.entries(results)) {
-                    if (coords) {
-                        geocodeCache[address] = coords;
-                    }
-                }
-                
-                console.log(`Batch geocoding complete. Geocoded ${Object.keys(results).filter(k => results[k] !== null).length} addresses`);
-                console.log(`Total cached addresses: ${Object.keys(geocodeCache).length}`);
-            } else {
-                console.error('Batch geocoding failed, falling back to individual geocoding');
-                // Fall back to individual geocoding if batch fails
-                for (const address of uncachedAddresses) {
-                    const coords = await getCoordinatesFromAddress(address);
-                    if (coords) {
-                        geocodeCache[address] = coords;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Batch geocoding error:', error);
-            // Fall back to individual geocoding on error
-            for (const address of uncachedAddresses) {
-                const coords = await getCoordinatesFromAddress(address);
-                if (coords) {
-                    geocodeCache[address] = coords;
-                }
+        for (const address of uncachedAddresses) {
+            const coords = await getCoordinatesFromAddress(address);
+            if (coords) {
+                geocodeCache[address] = coords;
             }
         }
+        
+        console.log(`Geocoding complete. Total cached addresses: ${Object.keys(geocodeCache).length}`);
     }
     
     // Now calculate distances using cached coordinates
