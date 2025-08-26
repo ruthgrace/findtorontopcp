@@ -305,6 +305,11 @@ async function handleSearch(e) {
             return;
         }
         
+        // Save ALL doctors to database before filtering (async, don't wait)
+        if (allDoctorsResults.length > 0) {
+            saveDoctorsToDatabase(allDoctorsResults);
+        }
+        
         // Use batch geocoding for all doctors
         const enrichedDoctors = await enrichDoctorsWithDistance(allDoctorsResults, userCoordinates, maxDistance);
         
@@ -324,11 +329,6 @@ async function handleSearch(e) {
         
         allDoctors = doctorsWithDistance;
         displayResults(doctorsWithDistance);
-        
-        // Optionally save doctors to database (async, don't wait)
-        if (doctorsWithDistance.length > 0) {
-            saveDoctorsToDatabase(doctorsWithDistance);
-        }
         
         if (doctorsWithDistance.length > 0) {
             document.getElementById('filtersSection').style.display = 'block';
