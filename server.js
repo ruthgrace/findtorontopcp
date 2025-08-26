@@ -345,53 +345,9 @@ app.get('/api/geocode-address', async (req, res) => {
             }
         }
         
-        // Fallback to OpenStreetMap
-        // Add a small delay to respect rate limits (1 request per second)
-        await new Promise(resolve => setTimeout(resolve, 1100));
-        
-        const osmUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=ca`;
-        
-        console.log('Using OpenStreetMap geocoder for:', address);
-        
-        const osmResponse = await fetch(osmUrl, {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'TorontoDoctorFinder/1.0' // Required by Nominatim
-            }
-        });
-        
-        if (osmResponse.ok) {
-            const osmData = await osmResponse.json();
-            console.log('OpenStreetMap results count:', osmData.length);
-            
-            if (osmData.length > 0) {
-                const result = osmData[0];
-                const coords = {
-                    lat: parseFloat(result.lat),
-                    lng: parseFloat(result.lon)
-                };
-                
-                console.log('Got coordinates from OpenStreetMap:', coords);
-                
-                // Cache the result in memory and database
-                geocodeCache[address] = coords;
-                if (dbInitialized) {
-                    db.saveGeocoding(address, coords.lat, coords.lng, 'openstreetmap').catch(err => {
-                        console.error('Error saving to database:', err);
-                    });
-                }
-                
-                res.json(coords);
-                return;
-            } else {
-                console.log('OpenStreetMap returned no results');
-            }
-        } else {
-            console.log('OpenStreetMap request failed with status:', osmResponse.status);
-        }
-        
-        // If geocoding fails, DON'T cache null - just return it
-        console.log('Could not geocode address - not caching null result');
+        // If Google Maps geocoding fails, just return null immediately
+        // No OpenStreetMap fallback - we're okay with missing data
+        console.log('Could not geocode address with Google Maps - returning null');
         res.json(null);
         
     } catch (error) {
