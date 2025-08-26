@@ -316,6 +316,11 @@ app.get('/api/geocode-address', async (req, res) => {
             if (googleResponse.ok) {
                 const googleData = await googleResponse.json();
                 
+                // Log the full response when it's not OK to help debug
+                if (googleData.status !== 'OK') {
+                    console.log('Google Maps API full response:', JSON.stringify(googleData, null, 2));
+                }
+                
                 if (googleData.status === 'OK' && googleData.results && googleData.results.length > 0) {
                     const location = googleData.results[0].geometry.location;
                     const coords = {
