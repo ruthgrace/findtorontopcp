@@ -30,3 +30,87 @@ Postal code of information is provided by the federal government yearly here: ht
 This application currently uses the 2025 data.
 
 Download the Shapefile for the new year, unzip it, and put the resulting folder in postcode_geodata.
+
+## Deployment
+
+### Step 1: Copy and enable systemd service
+
+```bash
+sudo cp /var/www/findtorontopcp/findtorontopcp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable findtorontopcp.service
+sudo systemctl start findtorontopcp.service
+```
+
+Check if it's running:
+```bash
+sudo systemctl status findtorontopcp.service
+```
+
+### Step 2: Setup NGINX Bootstrap (for initial Let's Encrypt setup)
+
+```bash
+# Create a symlink to the bootstrap config first
+sudo ln -s /var/www/findtorontopcp/nginx-bootstrap.conf /etc/nginx/conf.d/findtorontopcp.conf
+
+# Test nginx configuration
+sudo nginx -t
+
+# Reload nginx
+sudo systemctl reload nginx
+```
+
+### Step 3: Get SSL Certificate from Let's Encrypt
+
+```bash
+# Install certbot if not already installed
+sudo dnf install -y certbot python3-certbot-nginx
+
+# Get the certificate (replace with your actual domain)
+sudo certbot certonly --webroot -w /var/www/findtorontopcp -d findtorontopcp.com -d www.findtorontopcp.com
+```
+
+### Step 4: Switch to Full NGINX Configuration
+
+```bash
+# Remove the bootstrap symlink
+sudo rm /etc/nginx/conf.d/findtorontopcp.conf
+
+# Create symlink to the full config
+sudo ln -s /var/www/findtorontopcp/nginx.conf /etc/nginx/conf.d/findtorontopcp.conf
+
+# Test nginx configuration
+sudo nginx -t
+
+# Reload nginx
+sudo systemctl reload nginx
+```
+
+### Step 5: Setup Automatic SSL Renewal
+
+```bash
+# Test renewal works
+sudo certbot renew --dry-run
+
+# Add cron job for auto renewal (if not already exists)
+sudo crontab -l | grep -q 'certbot renew' || (sudo crontab -l 2>/dev/null; echo "0 0,12 * * * certbot renew --quiet && systemctl reload nginx") | sudo crontab -
+```
+
+### Useful Commands
+
+- **View app logs:** `sudo journalctl -u findtorontopcp -f`
+- **Restart app:** `sudo systemctl restart findtorontopcp`
+- **Check app status:** `sudo systemctl status findtorontopcp`
+- **Reload nginx:** `sudo systemctl reload nginx`
+- **Test SSL renewal:** `sudo certbot renew --dry-run`
+- **Check nginx error logs:** `sudo tail -f /var/log/nginx/error.log`
+- **Check app is responding:** `curl http://localhost:3002`
+
+### Troubleshooting
+
+If the app isn't working:
+1. Check if Node.js app is running: `sudo systemctl status findtorontopcp`
+2. Check if it's listening on port 3002: `sudo ss -tlnp | grep 3002`
+3. Check app logs: `sudo journalctl -u findtorontopcp -n 50`
+4. Check nginx logs: `sudo tail -f /var/log/nginx/error.log`
+5. Make sure database file has correct permissions: `ls -la /var/www/findtorontopcp/*.db`

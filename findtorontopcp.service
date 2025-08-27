@@ -1,0 +1,26 @@
+[Unit]
+Description=Find Toronto PCP Node.js Application
+After=network.target
+
+[Service]
+Type=simple
+User=ruth
+Group=ruth
+WorkingDirectory=/var/www/findtorontopcp
+ExecStart=/usr/bin/node /var/www/findtorontopcp/server.js
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=3002
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=findtorontopcp
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

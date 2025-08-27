@@ -10,7 +10,6 @@ let geocodeCache = {}; // Cache for geocoding results
 
 document.addEventListener('DOMContentLoaded', function() {
     const searchForm = document.getElementById('searchForm');
-    const useLocationCheckbox = document.getElementById('useLocation');
     const addressSearchInput = document.getElementById('addressSearch');
     const addressSuggestionsDiv = document.getElementById('addressSuggestions');
     const filtersSection = document.getElementById('filtersSection');
@@ -79,18 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.address-search-container')) {
             hideSuggestions();
-        }
-    });
-    
-    useLocationCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            getCurrentLocation();
-            addressSearchInput.disabled = true;
-            addressSearchInput.placeholder = 'Using your location...';
-        } else {
-            addressSearchInput.disabled = false;
-            addressSearchInput.placeholder = 'Enter an address in Toronto...';
-            userCoordinates = null;
         }
     });
     
@@ -222,7 +209,7 @@ async function handleSearch(e) {
     }
     
     if (!userCoordinates) {
-        displayError('Please select an address or use your current location.');
+        displayError('Please select an address.');
         return;
     }
     
@@ -486,35 +473,6 @@ async function getCoordinatesFromAddress(address) {
         geocodeCache[address] = null; // Cache the failure
     }
     return null;
-}
-
-function getCurrentLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                userCoordinates = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                console.log('Location obtained:', userCoordinates);
-                
-                // Find and display postal codes within radius
-                const maxDistanceInput = document.getElementById('maxDistance');
-                const radiusKm = parseFloat(maxDistanceInput.value) || 5;
-                const postalCodesInRadius = findPostalCodesWithinRadius(userCoordinates.lat, userCoordinates.lng, radiusKm);
-                displayPostalCodes(postalCodesInRadius);
-            },
-            (error) => {
-                console.error('Geolocation error:', error);
-                alert('Unable to get your location. Please enter a postal code.');
-                document.getElementById('useLocation').checked = false;
-                document.getElementById('postalCode').disabled = false;
-            }
-        );
-    } else {
-        alert('Geolocation is not supported by your browser.');
-        document.getElementById('useLocation').checked = false;
-    }
 }
 
 async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
