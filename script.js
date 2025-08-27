@@ -196,7 +196,6 @@ async function handleSearch(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
-    const includeInactive = formData.get('includeInactive') ? 'on' : '';
     const doctorType = formData.get('doctorType');
     const language = formData.get('language');
     const maxDistance = parseFloat(formData.get('maxDistance'));
@@ -242,7 +241,6 @@ async function handleSearch(e) {
             try {
                 // First try a regular search
                 const searchParams = new URLSearchParams();
-                if (includeInactive) searchParams.append('cbx-includeinactive', includeInactive);
                 searchParams.append('postalCode', pc.code.replace(' ', '+'));
                 searchParams.append('doctorType', doctorType);
                 searchParams.append('LanguagesSelected', language);

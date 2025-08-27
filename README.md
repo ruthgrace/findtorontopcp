@@ -21,7 +21,7 @@ curl 'https://register.cpso.on.ca/Get-Search-Results/' \
 >   -H 'traceparent: 00-7f3e2fe8e979490ea20f8efef046dbf1-fe346bc548e54e98-01' \
 >   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36' \
 >   -H 'x-requested-with: XMLHttpRequest' \
->   --data-raw 'cbx-includeinactive=on&postalCode=M2N+4&doctorType=Any&LanguagesSelected=ENGLISH'
+>   --data-raw 'postalCode=M2N+4&doctorType=Any&LanguagesSelected=ENGLISH'
 
 ## required yearly updates
 
