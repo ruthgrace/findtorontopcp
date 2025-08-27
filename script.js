@@ -732,17 +732,19 @@ function findPostalCodesWithinRadius(centerLat, centerLng, radiusKm) {
     
     console.log('FSAs found within radius:', Array.from(fsasInRadius));
     
-    // Now include all postal codes that belong to these FSAs
+    // Now include all FSAs found in the radius
+    // Since we only have FSA-level data, use those directly
+    const addedFSAs = new Set();
     for (const postalCode of torontoPostalCodes) {
-        // Get the FSA (first 3 characters) from the postal code
-        const fsa = postalCode.code.substring(0, 3);
-        
-        if (fsasInRadius.has(fsa)) {
+        // Check if this FSA code is in our radius
+        if (fsasInRadius.has(postalCode.code) && !addedFSAs.has(postalCode.code)) {
             const distance = calculateDistance(centerLat, centerLng, postalCode.lat, postalCode.lng);
+            // Use the FSA code directly (it's already 3 characters)
             postalCodesInRadius.push({
                 code: postalCode.code,
                 distance: Math.round(distance * 10) / 10
             });
+            addedFSAs.add(postalCode.code);
         }
     }
     
