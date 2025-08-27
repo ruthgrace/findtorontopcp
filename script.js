@@ -735,9 +735,14 @@ function findPostalCodesWithinRadius(centerLat, centerLng, radiusKm) {
     // Now include all FSAs found in the radius
     // Since we only have FSA-level data, use those directly
     const addedFSAs = new Set();
+    console.log(`Checking ${torontoPostalCodes.length} postal codes against ${fsasInRadius.size} FSAs`);
+    if (torontoPostalCodes.length > 0) {
+        console.log('Sample postal code:', torontoPostalCodes[0]);
+    }
     for (const postalCode of torontoPostalCodes) {
         // Check if this FSA code is in our radius
         if (fsasInRadius.has(postalCode.code) && !addedFSAs.has(postalCode.code)) {
+            console.log(`Matched FSA: ${postalCode.code}`);
             const distance = calculateDistance(centerLat, centerLng, postalCode.lat, postalCode.lng);
             // Use the FSA code directly (it's already 3 characters)
             postalCodesInRadius.push({
