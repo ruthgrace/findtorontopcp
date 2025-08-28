@@ -6,25 +6,12 @@ const path = require('path');
 
 const execPromise = util.promisify(exec);
 
-// Load GitHub token from constants.js
-function loadGitHubToken() {
-    try {
-        const constants = require('./constants.js');
-        if (constants.GITHUB_TOKEN) {
-            process.env.GITHUB_TOKEN = constants.GITHUB_TOKEN;
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error('Warning: Could not load constants.js:', error.message);
-        return false;
-    }
-}
+// No longer need to load GitHub token since we're using SSH
 
 // Check if there are uncommitted changes
 async function hasUncommittedChanges() {
     try {
-        const { stdout } = await execPromise('git status --porcelain doctors.db* addresses-toronto-cache.db*', { 
+        const { stdout } = await execPromise('git status --porcelain doctors.db', { 
             cwd: __dirname 
         });
         return stdout.trim().length > 0;
@@ -37,7 +24,7 @@ async function hasUncommittedChanges() {
 // Get a summary of changes
 async function getChangesSummary() {
     try {
-        const { stdout } = await execPromise('git diff --stat doctors.db* addresses-toronto-cache.db*', { 
+        const { stdout } = await execPromise('git diff --stat doctors.db', { 
             cwd: __dirname 
         });
         return stdout.trim() || 'Database files modified';
@@ -50,7 +37,7 @@ async function getChangesSummary() {
 async function commitDatabaseChanges() {
     try {
         // Add database files to git
-        await execPromise('git add doctors.db* addresses-toronto-cache.db*', { 
+        await execPromise('git add doctors.db', { 
             cwd: __dirname 
         });
         
@@ -88,41 +75,15 @@ Automated commit by update service`;
 // Push changes to GitHub
 async function pushToGitHub() {
     try {
-        const token = process.env.GITHUB_TOKEN;
-        if (!token) {
-            console.error('GITHUB_TOKEN not found in environment');
-            console.log('Skipping push to GitHub');
-            return false;
-        }
-        
         // Get current branch
         const { stdout: branch } = await execPromise('git branch --show-current', { 
             cwd: __dirname 
         });
         const currentBranch = branch.trim();
         
-        // Get remote URL
-        const { stdout: remoteUrl } = await execPromise('git remote get-url origin', { 
-            cwd: __dirname 
-        });
-        
-        // Parse GitHub repo from URL (works with both SSH and HTTPS URLs)
-        let repoPath;
-        if (remoteUrl.includes('github.com:')) {
-            // SSH format: git@github.com:user/repo.git
-            repoPath = remoteUrl.split('github.com:')[1].replace('.git', '').trim();
-        } else if (remoteUrl.includes('github.com/')) {
-            // HTTPS format: https://github.com/user/repo.git
-            repoPath = remoteUrl.split('github.com/')[1].replace('.git', '').trim();
-        } else {
-            console.error('Could not parse GitHub repository from remote URL:', remoteUrl);
-            return false;
-        }
-        
-        // Push using token authentication
-        const pushUrl = `https://${token}@github.com/${repoPath}.git`;
+        // Push using SSH (which is already configured)
         const { stdout, stderr } = await execPromise(
-            `git push ${pushUrl} ${currentBranch}`,
+            `git push origin ${currentBranch}`,
             { cwd: __dirname }
         );
         
@@ -145,10 +106,7 @@ async function checkAndPushChanges() {
     console.log('Time:', new Date().toISOString());
     
     try {
-        // Load GitHub token from constants.js
-        if (!loadGitHubToken()) {
-            console.error('Failed to load GitHub token from constants.js');
-        }
+        // No need to load token, using SSH authentication
         
         // Check for uncommitted changes
         if (await hasUncommittedChanges()) {
