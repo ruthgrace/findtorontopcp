@@ -360,7 +360,7 @@ function parseJSONResults(data) {
                     result.postalcode
                 ].filter(Boolean).join(', '),
                 phone: result.phonenumber || '',
-                languages: result.languages || 'English',
+                languages: result.languages || 'Not specified',
                 status: result.status || 'Active',
                 cpsoNumber: result.cpsonumber || ''
             };

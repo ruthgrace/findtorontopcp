@@ -160,13 +160,14 @@ class ParallelCPSOSearcher {
                             
                             return {
                                 ...doc,
-                                address: addressParts.join(', ')
+                                address: addressParts.join(', '),
+                                specialties: doc.specialties  // Explicitly preserve specialties field
                             };
                         });
                         
                         // Debug: Check first parsed doctor
                         if (parsedDoctors.length > 0 && !this.debugLogged) {
-                            console.log(`    First parsed doctor: name=${parsedDoctors[0].name}, address=${parsedDoctors[0].address}`);
+                            console.log(`    First parsed doctor: name=${parsedDoctors[0].name}, address=${parsedDoctors[0].address}, specialties=${parsedDoctors[0].specialties}`);
                             this.debugLogged = true;
                         }
                         
