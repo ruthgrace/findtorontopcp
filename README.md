@@ -23,14 +23,6 @@ curl 'https://register.cpso.on.ca/Get-Search-Results/' \
 >   -H 'x-requested-with: XMLHttpRequest' \
 >   --data-raw 'postalCode=M2N+4&doctorType=Any&LanguagesSelected=ENGLISH'
 
-## required yearly updates
-
-Postal code of information is provided by the federal government yearly here: https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index-eng.cfm
-
-This application currently uses the 2025 data.
-
-Download the Shapefile for the new year, unzip it, and put the resulting folder in postcode_geodata.
-
 ## Deployment
 
 ### Step 1: Copy and enable systemd service
@@ -114,3 +106,32 @@ If the app isn't working:
 3. Check app logs: `sudo journalctl -u findtorontopcp -n 50`
 4. Check nginx logs: `sudo tail -f /var/log/nginx/error.log`
 5. Make sure database file has correct permissions: `ls -la /var/www/findtorontopcp/*.db`
+
+## required yearly updates
+
+Postal code of information is provided by the federal government yearly here: https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index-eng.cfm
+
+This application currently uses the 2025 data.
+
+Download the Shapefile for the new year, unzip it, and put the resulting folder in postcode_geodata.
+
+## to do
+
+search all of these addresses so you can cache everything
+Downtown/Central Core:
+
+[done] 100 Queen Street West, Toronto
+[done] 1 Blue Jays Way, Toronto
+[done] 500 Lake Shore Boulevard West, Toronto
+5000 Yonge Street, North York
+3401 Dufferin Street, North York
+2901 Bayview Avenue, North York
+1967 Danforth Avenue, Toronto
+2200 Eglinton Avenue East, Scarborough
+4850 Sheppard Avenue East, Scarborough
+2338 Bloor Street West, Toronto
+5230 Dundas Street West, Etobicoke
+25 The West Mall, Etobicoke
+1200 Bay Street, Toronto
+1500 Don Mills Road, Toronto
+3000 Lawrence Avenue West, Toronto
