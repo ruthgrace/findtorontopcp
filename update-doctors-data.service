@@ -13,13 +13,15 @@ StandardError=journal
 
 # Environment
 Environment="NODE_ENV=production"
+Environment="HOME=/home/ruth"
 
 # Security settings
 PrivateTmp=yes
 NoNewPrivileges=true
 ProtectSystem=strict
-ProtectHome=true
+ProtectHome=read-only
 ReadWritePaths=/var/www/findtorontopcp
+ReadOnlyPaths=/home/ruth/.ssh
 
 # Resource limits
 CPUQuota=50%
