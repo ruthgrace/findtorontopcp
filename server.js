@@ -5,6 +5,7 @@ const fs = require('fs');
 require('dotenv').config();
 const db = require('./database');
 const { GOOGLE_MAPS_API_KEY } = require('./constants');
+const ParallelCPSOSearcher = require('./parallel-cpso-search');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -34,8 +35,8 @@ let dbInitialized = false;
 })();
 
 app.use(express.static(path.join(__dirname)));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json()); // For parsing JSON bodies
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' })); // For parsing JSON bodies
 
 app.get('/api/address-suggest', async (req, res) => {
     try {
@@ -183,6 +184,46 @@ app.post('/api/smart-search', async (req, res) => {
     } catch (error) {
         console.error('Smart search error:', error);
         res.status(500).json({ error: 'Smart search failed' });
+    }
+});
+
+// New parallel search endpoint for multiple postal codes
+app.post('/api/parallel-search', async (req, res) => {
+    try {
+        const { postalCodes, doctorType, specialistType, language } = req.body;
+        console.log(`Parallel search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
+        
+        const searcher = new ParallelCPSOSearcher({
+            concurrency: 5,
+            delayBetweenBatches: 200,
+            retryAttempts: 3,
+            retryDelay: 1000
+        });
+        
+        const startTime = Date.now();
+        const allDoctors = await searcher.smartSearchWithParallel(
+            postalCodes,
+            doctorType || 'Any',
+            specialistType,
+            language || 'ENGLISH'
+        );
+        const duration = Date.now() - startTime;
+        
+        console.log(`Parallel search completed in ${duration}ms, found ${allDoctors.length} doctors`);
+        
+        const response = { 
+            totalcount: allDoctors.length, 
+            results: allDoctors,
+            searchTime: duration 
+        };
+        
+        const responseSize = JSON.stringify(response).length;
+        console.log(`Sending response: ${responseSize} bytes, ${allDoctors.length} doctors`);
+        
+        res.json(response);
+    } catch (error) {
+        console.error('Parallel search error:', error);
+        res.status(500).json({ error: 'Parallel search failed' });
     }
 });
 

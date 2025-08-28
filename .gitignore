@@ -169,3 +169,7 @@ test_screenshots
 constants.js
 
 postcode_geodata
+
+# SQLite database files
+*.db-shm
+*.db-wal

@@ -174,6 +174,12 @@ async function saveDoctorsBatch(doctors) {
         const insertBatch = [];
         
         for (const doctor of doctors) {
+            // Skip doctors with invalid addresses
+            if (!doctor.address || typeof doctor.address !== 'string' || !doctor.address.trim()) {
+                skipped++;
+                continue;
+            }
+            
             const existing = existingMap.get(doctor.address);
             
             if (!existing) {

@@ -241,92 +241,44 @@ async function handleSearch(e) {
         // Find postal codes within radius
         const postalCodesInRadius = findPostalCodesWithinRadius(userCoordinates.lat, userCoordinates.lng, maxDistance);
         
-        console.log(`Searching for doctors in ${postalCodesInRadius.length} postal codes...`);
+        console.log(`Searching for doctors in ${postalCodesInRadius.length} postal codes using parallel search...`);
         
-        // Search for doctors in all postal codes
-        const allDoctorsResults = [];
+        // Use the new parallel search endpoint
+        const postalCodesToSearch = postalCodesInRadius.map(pc => pc.code);
         
-        // Process postal codes in batches to avoid overwhelming the server
-        for (const pc of postalCodesInRadius) {
-            try {
-                // First try a regular search
-                const searchParams = new URLSearchParams();
-                searchParams.append('postalCode', pc.code.replace(' ', '+'));
-                searchParams.append('doctorType', doctorType);
-                if (specialistType) {
-                    searchParams.append('SpecialistType', specialistType);
-                }
-                searchParams.append('LanguagesSelected', language);
-                
-                const response = await fetch('/api/search', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: searchParams.toString()
-                });
-                
-                if (response.ok) {
-                    const responseText = await response.text();
-                    let doctors = [];
-                    let needsSmartSearch = false;
-                    
-                    // Check if response is JSON or HTML
-                    if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
-                        // It's JSON
-                        const data = JSON.parse(responseText);
-                        
-                        // Check if we got too many results (-1)
-                        if (data.totalcount === -1) {
-                            console.log(`Too many results for ${pc.code}, using smart search...`);
-                            needsSmartSearch = true;
-                        } else {
-                            doctors = parseJSONResults(data);
-                        }
-                    } else {
-                        // It's HTML
-                        doctors = parseSearchResults(responseText);
-                    }
-                    
-                    // If we need smart search, use the new endpoint
-                    if (needsSmartSearch) {
-                        const smartResponse = await fetch('/api/smart-search', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                postalCode: pc.code,
-                                doctorType: doctorType,
-                                specialistType: specialistType,
-                                language: language
-                            })
-                        });
-                        
-                        if (smartResponse.ok) {
-                            const smartData = await smartResponse.json();
-                            doctors = parseJSONResults(smartData);
-                            console.log(`Smart search found ${doctors.length} doctors in ${pc.code}`);
-                        }
-                    }
-                    
-                    if (doctors.length > 0) {
-                        // Add postal code info to each doctor
-                        doctors.forEach(doc => {
-                            doc.searchPostalCode = pc.code;
-                        });
-                        
-                        allDoctorsResults.push(...doctors);
-                    } else {
-                        console.log(`No doctors found for postal code ${pc.code}`);
-                    }
-                }
-            } catch (error) {
-                console.error(`Error searching postal code ${pc.code}:`, error);
-            }
+        const parallelResponse = await fetch('/api/parallel-search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                postalCodes: postalCodesToSearch,
+                doctorType: doctorType,
+                specialistType: specialistType,
+                language: language
+            })
+        });
+        
+        if (!parallelResponse.ok) {
+            throw new Error(`Parallel search failed: ${parallelResponse.status}`);
         }
         
-        console.log(`Found ${allDoctorsResults.length} doctors total`);
+        const parallelData = await parallelResponse.json();
+        const allDoctorsResults = parallelData.results || [];
+        
+        console.log(`Parallel search completed in ${parallelData.searchTime}ms, found ${allDoctorsResults.length} doctors`);
+        
+        // Debug: Check sample of results
+        console.log('Sample doctors from parallel search:', allDoctorsResults.slice(0, 3));
+        
+        // Debug: Check address fields
+        const addressSample = allDoctorsResults.slice(0, 10).map(d => ({
+            name: d.name,
+            address: d.address,
+            addressType: typeof d.address,
+            addressLength: d.address ? d.address.length : 0
+        }));
+        console.log('Address field analysis:', addressSample);
         
         if (allDoctorsResults.length === 0) {
             const typeMessage = specialistType ? specialistType : (doctorType === 'Family Doctor' ? 'family doctors' : 'doctors');
@@ -341,7 +293,9 @@ async function handleSearch(e) {
         }
         
         // Use batch geocoding for all doctors
+        console.log('Starting geocoding and distance calculation...');
         const enrichedDoctors = await enrichDoctorsWithDistance(allDoctorsResults, userCoordinates, maxDistance);
+        console.log(`Geocoding complete, ${enrichedDoctors.length} doctors within range`);
         
         // enrichDoctorsWithDistance already filters by distance, so just use the results
         const doctorsWithDistance = enrichedDoctors;
@@ -489,8 +443,9 @@ async function getCoordinatesFromAddress(address) {
 }
 
 async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
-    // Collect all unique addresses
-    const uniqueAddresses = [...new Set(doctors.map(d => d.address))];
+    // Filter out doctors with invalid addresses and collect unique addresses
+    const validDoctors = doctors.filter(d => d.address && typeof d.address === 'string' && d.address.trim());
+    const uniqueAddresses = [...new Set(validDoctors.map(d => d.address))];
     
     // Filter addresses that aren't already cached
     const uncachedAddresses = uniqueAddresses.filter(addr => !geocodeCache[addr]);
@@ -509,8 +464,8 @@ async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
         console.log(`Geocoding complete. Total cached addresses: ${Object.keys(geocodeCache).length}`);
     }
     
-    // Now calculate distances using cached coordinates
-    for (const doctor of doctors) {
+    // Now calculate distances using cached coordinates - only for valid doctors
+    for (const doctor of validDoctors) {
         const doctorCoords = geocodeCache[doctor.address];
         
         if (doctorCoords) {
@@ -526,18 +481,18 @@ async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
         }
     }
     
-    doctors.sort((a, b) => {
+    validDoctors.sort((a, b) => {
         if (a.distance === null) return 1;
         if (b.distance === null) return -1;
         return a.distance - b.distance;
     });
     
-    const withCoords = doctors.filter(d => d.distance !== null).length;
-    const withinRange = doctors.filter(d => d.distance !== null && d.distance <= maxDistance).length;
+    const withCoords = validDoctors.filter(d => d.distance !== null).length;
+    const withinRange = validDoctors.filter(d => d.distance !== null && d.distance <= maxDistance).length;
     console.log(`Geocoding results: ${withCoords} doctors with coordinates, ${withinRange} within ${maxDistance}km range`);
     
     // Only return doctors that have valid coordinates and are within range
-    return doctors.filter(d => d.distance !== null && d.distance <= maxDistance);
+    return validDoctors.filter(d => d.distance !== null && d.distance <= maxDistance);
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
