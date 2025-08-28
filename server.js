@@ -6,6 +6,7 @@ require('dotenv').config();
 const db = require('./database');
 const { GOOGLE_MAPS_API_KEY } = require('./constants');
 const ParallelCPSOSearcher = require('./parallel-cpso-search');
+const ParallelGeocoder = require('./parallel-geocoder');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -13,6 +14,7 @@ const PORT = process.env.PORT || 3002;
 // Initialize database and load geocode cache
 let geocodeCache = {};
 let dbInitialized = false;
+let parallelGeocoder = null;
 
 // Initialize database on startup
 (async () => {
@@ -27,10 +29,26 @@ let dbInitialized = false;
         // Get and display database stats
         const stats = await db.getDatabaseStats();
         console.log('Database statistics:', stats);
+        
+        // Initialize parallel geocoder
+        parallelGeocoder = new ParallelGeocoder({
+            apiKey: GOOGLE_MAPS_API_KEY,
+            concurrency: 20, // 20 parallel requests (well under 50/sec limit)
+            cache: geocodeCache,
+            dbSaveFunction: db.saveGeocoding.bind(db)
+        });
+        console.log('Parallel geocoder initialized with concurrency:', 20);
     } catch (error) {
         console.error('Failed to initialize database:', error);
         // Fall back to in-memory cache only
         geocodeCache = {};
+        
+        // Still initialize geocoder without database
+        parallelGeocoder = new ParallelGeocoder({
+            apiKey: GOOGLE_MAPS_API_KEY,
+            concurrency: 20,
+            cache: geocodeCache
+        });
     }
 })();
 
@@ -194,8 +212,8 @@ app.post('/api/parallel-search', async (req, res) => {
         console.log(`Parallel search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
         
         const searcher = new ParallelCPSOSearcher({
-            concurrency: 5,
-            delayBetweenBatches: 200,
+            concurrency: 20,  // Increased from 5 to 20
+            delayBetweenBatches: 0,  // No delay needed
             retryAttempts: 3,
             retryDelay: 1000
         });
@@ -320,6 +338,44 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // Google Maps API key is loaded from constants.js
+
+// New batch geocoding endpoint with parallel processing
+app.post('/api/geocode-batch', async (req, res) => {
+    try {
+        const { addresses } = req.body;
+        
+        if (!addresses || !Array.isArray(addresses)) {
+            return res.status(400).json({ error: 'addresses array is required' });
+        }
+        
+        if (!parallelGeocoder) {
+            return res.status(503).json({ error: 'Geocoding service not initialized' });
+        }
+        
+        console.log(`Batch geocoding request for ${addresses.length} addresses`);
+        const startTime = Date.now();
+        
+        const results = await parallelGeocoder.geocodeBatch(addresses);
+        
+        const duration = Date.now() - startTime;
+        const successCount = Object.values(results).filter(coords => coords !== null).length;
+        
+        console.log(`Batch geocoding completed in ${duration}ms. Success: ${successCount}/${addresses.length}`);
+        
+        res.json({
+            results,
+            stats: {
+                total: addresses.length,
+                success: successCount,
+                failed: addresses.length - successCount,
+                duration
+            }
+        });
+    } catch (error) {
+        console.error('Batch geocoding error:', error);
+        res.status(500).json({ error: 'Batch geocoding failed' });
+    }
+});
 
 app.get('/api/geocode-address', async (req, res) => {
     try {

@@ -442,34 +442,57 @@ async function getCoordinatesFromAddress(address) {
     return null;
 }
 
-async function geocodeAddressBatch(addresses, batchSize = 10) {
-    const results = {};
-    
-    // Process in batches to parallelize requests
-    for (let i = 0; i < addresses.length; i += batchSize) {
-        const batch = addresses.slice(i, i + batchSize);
-        const promises = batch.map(address => 
-            fetch(`/api/geocode-address?address=${encodeURIComponent(address)}`)
-                .then(response => response.json())
-                .then(data => ({ address, coords: data }))
-                .catch(error => {
-                    console.error('Geocoding error for:', address, error);
-                    return { address, coords: null };
-                })
-        );
+async function geocodeAddressBatch(addresses, batchSize = 100) {
+    try {
+        // Use the new batch endpoint for parallel geocoding
+        const response = await fetch('/api/geocode-batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ addresses })
+        });
         
-        const batchResults = await Promise.all(promises);
-        for (const result of batchResults) {
-            results[result.address] = result.coords;
+        if (!response.ok) {
+            throw new Error('Batch geocoding failed');
         }
         
-        // Small delay between batches to avoid overwhelming the server
-        if (i + batchSize < addresses.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+        const data = await response.json();
+        console.log(`Batch geocoding stats:`, data.stats);
+        
+        return data.results;
+    } catch (error) {
+        console.error('Batch geocoding error:', error);
+        
+        // Fallback to old sequential method if batch endpoint fails
+        console.log('Falling back to sequential geocoding...');
+        const results = {};
+        
+        for (let i = 0; i < addresses.length; i += batchSize) {
+            const batch = addresses.slice(i, i + batchSize);
+            const promises = batch.map(address => 
+                fetch(`/api/geocode-address?address=${encodeURIComponent(address)}`)
+                    .then(response => response.json())
+                    .then(data => ({ address, coords: data }))
+                    .catch(error => {
+                        console.error('Geocoding error for:', address, error);
+                        return { address, coords: null };
+                    })
+            );
+            
+            const batchResults = await Promise.all(promises);
+            for (const result of batchResults) {
+                results[result.address] = result.coords;
+            }
+            
+            // Small delay between batches to avoid overwhelming the server
+            if (i + batchSize < addresses.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
         }
+        
+        return results;
     }
-    
-    return results;
 }
 
 async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
@@ -482,10 +505,10 @@ async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
     
     // Geocode all uncached addresses in parallel batches
     if (uncachedAddresses.length > 0) {
-        console.log(`Geocoding ${uncachedAddresses.length} uncached addresses in parallel...`);
+        console.log(`Geocoding ${uncachedAddresses.length} uncached addresses using parallel processing...`);
         const startTime = Date.now();
         
-        const geocodedResults = await geocodeAddressBatch(uncachedAddresses, 10);
+        const geocodedResults = await geocodeAddressBatch(uncachedAddresses);
         
         // Update cache with results
         for (const [address, coords] of Object.entries(geocodedResults)) {
