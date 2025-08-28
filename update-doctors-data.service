@@ -1,0 +1,30 @@
+[Unit]
+Description=Update doctors database from CPSO
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/findtorontopcp
+ExecStart=/usr/bin/node /var/www/findtorontopcp/update-doctors-data.js
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment="NODE_ENV=production"
+
+# Security settings
+PrivateTmp=yes
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/findtorontopcp
+
+# Resource limits
+CPUQuota=50%
+MemoryLimit=512M
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target

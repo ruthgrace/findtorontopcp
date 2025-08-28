@@ -1,0 +1,15 @@
+[Unit]
+Description=Daily update of doctors database
+Requires=update-doctors-data.service
+
+[Timer]
+# Run daily at 3:00 AM
+OnCalendar=daily
+OnCalendar=*-*-* 03:00:00
+# Run on boot if missed
+Persistent=true
+# Randomize by up to 30 minutes to avoid load spikes
+RandomizedDelaySec=1800
+
+[Install]
+WantedBy=timers.target
