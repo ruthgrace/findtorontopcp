@@ -655,10 +655,6 @@ function displayResults(doctors) {
                 </div>
                 ` : ''}
             </div>
-            
-            <div class="doctor-status ${doctor.status === 'Active' ? 'status-active' : 'status-inactive'}">
-                ${doctor.status}
-            </div>
         </div>
     `).join('');
 }
