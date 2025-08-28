@@ -121,17 +121,31 @@ search all of these addresses so you can cache everything
 Downtown/Central Core:
 
 [done] 100 Queen Street West, Toronto
+
 [done] 1 Blue Jays Way, Toronto
+
 [done] 500 Lake Shore Boulevard West, Toronto
+
 [done] 5000 Yonge Street, North York
+
 [done] 3401 Dufferin Street, North York
-2901 Bayview Avenue, North York
+
+[done] 2901 Bayview Avenue, North York
+
 1967 Danforth Avenue, Toronto
+
 2200 Eglinton Avenue East, Scarborough
+
 4850 Sheppard Avenue East, Scarborough
+
 2338 Bloor Street West, Toronto
+
 5230 Dundas Street West, Etobicoke
+
 25 The West Mall, Etobicoke
+
 1200 Bay Street, Toronto
+
 1500 Don Mills Road, Toronto
+
 3000 Lawrence Avenue West, Toronto
