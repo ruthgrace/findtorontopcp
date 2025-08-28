@@ -305,7 +305,18 @@ async function handleSearch(e) {
         console.log(`Geocoding complete, ${enrichedDoctors.length} doctors within range`);
         
         // enrichDoctorsWithDistance already filters by distance, so just use the results
-        const doctorsWithDistance = enrichedDoctors;
+        // Transform the data to match what displayResults expects
+        const doctorsWithDistance = enrichedDoctors.map(doc => ({
+            name: doc.name || 'Unknown',
+            specialty: doc.specialties || 'General Practice',  // Map specialties to specialty
+            address: doc.address || '',
+            phone: doc.phonenumber || '',  // Map phonenumber to phone
+            status: doc.registrationstatus || 'Active',
+            cpsoNumber: doc.cpsonumber || '',
+            distance: doc.distance,
+            coordinates: doc.coordinates,
+            searchPostalCode: doc.searchPostalCode
+        }));
         
         console.log(`${doctorsWithDistance.length} doctors within ${maxDistance}km`);
         
@@ -349,6 +360,13 @@ function parseJSONResults(data) {
         }
         
         data.results.forEach(result => {
+            // Debug log to see what fields we're getting
+            if (doctors.length === 0) {
+                console.log('First result from server:', result);
+                console.log('Specialties field:', result.specialties);
+                console.log('Phone field:', result.phonenumber);
+            }
+            
             const doctor = {
                 name: result.name || 'Unknown',
                 specialty: result.specialties || 'General Practice',
