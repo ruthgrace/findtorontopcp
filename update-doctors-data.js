@@ -8,13 +8,18 @@ const execPromise = util.promisify(exec);
 
 // No longer need to load GitHub token since we're using SSH
 
-// Check if there are uncommitted changes
+// Check if there are uncommitted changes (staged or unstaged)
 async function hasUncommittedChanges() {
     try {
+        // Check both staged and unstaged changes
         const { stdout } = await execPromise('git status --porcelain doctors.db', { 
             cwd: __dirname 
         });
-        return stdout.trim().length > 0;
+        // Also check if there are staged changes ready to commit
+        const { stdout: diffCached } = await execPromise('git diff --cached --name-only doctors.db', {
+            cwd: __dirname
+        });
+        return stdout.trim().length > 0 || diffCached.trim().length > 0;
     } catch (error) {
         console.error('Error checking git status:', error);
         return false;
@@ -36,10 +41,17 @@ async function getChangesSummary() {
 // Commit database changes to git
 async function commitDatabaseChanges() {
     try {
-        // Add database files to git
-        await execPromise('git add doctors.db', { 
+        // Add database files to git (only if not already staged)
+        const { stdout: status } = await execPromise('git status --porcelain doctors.db', { 
             cwd: __dirname 
         });
+        
+        // If file has changes but isn't staged (status starts with space or ?)
+        if (status && (status[1] === 'M' || status[1] === '?' || status[1] === ' ')) {
+            await execPromise('git add doctors.db', { 
+                cwd: __dirname 
+            });
+        }
         
         // Get changes summary
         const changesSummary = await getChangesSummary();
