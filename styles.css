@@ -144,6 +144,16 @@ header h1 {
     background-color: #e8f5e9;
 }
 
+.no-matches-warning {
+    padding: 15px;
+    color: #666;
+    font-size: 0.95rem;
+    text-align: center;
+    font-style: italic;
+    background-color: #fef8e7;
+    border-left: 3px solid #ffc107;
+}
+
 .search-btn {
     grid-column: 1 / -1;
     background: #9CAF88;

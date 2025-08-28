@@ -98,7 +98,7 @@ async function fetchAddressSuggestions(query) {
         if (data.suggestions && data.suggestions.length > 0) {
             displaySuggestions(data.suggestions);
         } else {
-            hideSuggestions();
+            displayNoMatchesWarning();
         }
     } catch (error) {
         console.error('Error fetching address suggestions:', error);
@@ -141,6 +141,13 @@ function hideSuggestions() {
     const suggestionsDiv = document.getElementById('addressSuggestions');
     suggestionsDiv.classList.remove('active');
     suggestionsDiv.innerHTML = '';
+    selectedSuggestionIndex = -1;
+}
+
+function displayNoMatchesWarning() {
+    const suggestionsDiv = document.getElementById('addressSuggestions');
+    suggestionsDiv.innerHTML = '<div class="no-matches-warning">No matching address found. Type the beginning of an address to see address suggestions.</div>';
+    suggestionsDiv.classList.add('active');
     selectedSuggestionIndex = -1;
 }
 
