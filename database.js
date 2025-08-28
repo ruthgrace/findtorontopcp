@@ -17,6 +17,12 @@ async function initDatabase() {
         });
 
         console.log('Connected to SQLite database:', DB_PATH);
+        
+        // Enable WAL mode for better concurrency with 30,000+ doctors
+        await db.exec('PRAGMA journal_mode = WAL');
+        await db.exec('PRAGMA synchronous = NORMAL');
+        await db.exec('PRAGMA cache_size = 10000');
+        await db.exec('PRAGMA temp_store = MEMORY');
 
         // Create doctors table (stores doctor info without coordinates)
         await db.exec(`
@@ -47,10 +53,14 @@ async function initDatabase() {
             )
         `);
 
-        // Create indexes for better performance
+        // Create indexes for better performance with 30,000+ doctors
         await db.exec(`
             CREATE INDEX IF NOT EXISTS idx_doctors_address ON doctors(address);
             CREATE INDEX IF NOT EXISTS idx_doctors_postal_code ON doctors(postal_code);
+            CREATE INDEX IF NOT EXISTS idx_doctors_cpso ON doctors(cpso_number);
+            CREATE INDEX IF NOT EXISTS idx_doctors_status ON doctors(status);
+            CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors(specialty);
+            CREATE INDEX IF NOT EXISTS idx_doctors_updated ON doctors(updated_at);
             CREATE INDEX IF NOT EXISTS idx_geocoding_address ON geocoding(address);
         `);
 
@@ -131,22 +141,121 @@ async function saveDoctor(doctorData) {
     }
 }
 
-// Batch save doctors
+// Batch save doctors - optimized for large datasets
 async function saveDoctorsBatch(doctors) {
     try {
+        const startTime = Date.now();
         await db.run('BEGIN TRANSACTION');
         
+        // Get all addresses we're about to process
+        const addresses = doctors.map(d => d.address);
+        
+        // Fetch existing doctors in batches (SQLite has parameter limit)
+        const BATCH_SIZE = 500;
+        const existingMap = new Map();
+        
+        for (let i = 0; i < addresses.length; i += BATCH_SIZE) {
+            const batch = addresses.slice(i, i + BATCH_SIZE);
+            const placeholders = batch.map(() => '?').join(',');
+            
+            const existingDoctors = await db.all(
+                `SELECT name, specialty, address, phone, languages, status, cpso_number, postal_code 
+                 FROM doctors WHERE address IN (${placeholders})`,
+                batch
+            );
+            
+            existingDoctors.forEach(doc => {
+                existingMap.set(doc.address, doc);
+            });
+        }
+        
+        let inserted = 0, updated = 0, skipped = 0;
+        const updateBatch = [];
+        const insertBatch = [];
+        
         for (const doctor of doctors) {
-            await saveDoctor(doctor);
+            const existing = existingMap.get(doctor.address);
+            
+            if (!existing) {
+                insertBatch.push(doctor);
+                inserted++;
+            } else if (hasDataChanged(existing, doctor)) {
+                updateBatch.push(doctor);
+                updated++;
+            } else {
+                skipped++;
+            }
+        }
+        
+        // Batch inserts
+        if (insertBatch.length > 0) {
+            const insertStmt = await db.prepare(
+                `INSERT INTO doctors 
+                 (name, specialty, address, phone, languages, status, cpso_number, postal_code, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+            );
+            
+            for (const doctor of insertBatch) {
+                await insertStmt.run(
+                    doctor.name,
+                    doctor.specialty,
+                    doctor.address,
+                    doctor.phone,
+                    doctor.languages,
+                    doctor.status,
+                    doctor.cpsoNumber,
+                    doctor.searchPostalCode || null
+                );
+            }
+            await insertStmt.finalize();
+        }
+        
+        // Batch updates
+        if (updateBatch.length > 0) {
+            const updateStmt = await db.prepare(
+                `UPDATE doctors SET
+                 name = ?, specialty = ?, phone = ?, languages = ?, 
+                 status = ?, cpso_number = ?, postal_code = ?, updated_at = CURRENT_TIMESTAMP
+                 WHERE address = ?`
+            );
+            
+            for (const doctor of updateBatch) {
+                await updateStmt.run(
+                    doctor.name,
+                    doctor.specialty,
+                    doctor.phone,
+                    doctor.languages,
+                    doctor.status,
+                    doctor.cpsoNumber,
+                    doctor.searchPostalCode || null,
+                    doctor.address
+                );
+            }
+            await updateStmt.finalize();
         }
         
         await db.run('COMMIT');
-        console.log(`Saved ${doctors.length} doctors to database`);
+        
+        const elapsed = Date.now() - startTime;
+        console.log(`Database update in ${elapsed}ms: ${inserted} new, ${updated} modified, ${skipped} unchanged (total: ${doctors.length})`);
+        
+        return { inserted, updated, skipped, elapsed };
     } catch (error) {
         await db.run('ROLLBACK');
         console.error('Error in batch save:', error);
         throw error;
     }
+}
+
+// Helper function to check if doctor data has changed
+function hasDataChanged(existing, newData) {
+    return existing.name !== newData.name ||
+           existing.specialty !== newData.specialty ||
+           existing.phone !== newData.phone ||
+           existing.languages !== newData.languages ||
+           existing.status !== newData.status ||
+           existing.cpso_number !== newData.cpsoNumber ||
+           existing.postal_code !== (newData.searchPostalCode || null);
 }
 
 // Get geocoding for an address
@@ -287,5 +396,6 @@ module.exports = {
     getAllGeocodedAddresses,
     searchDoctorsByPostalCode,
     getDatabaseStats,
-    closeDatabase
+    closeDatabase,
+    hasDataChanged
 };
