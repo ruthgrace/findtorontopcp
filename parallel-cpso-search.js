@@ -109,6 +109,7 @@ class ParallelCPSOSearcher {
 
     async smartSearchWithParallel(basePostalCodes, doctorType = 'Any', specialistType = null, language = 'ENGLISH') {
         const allDoctors = [];
+        const seenCPSONumbers = new Set(); // Track unique doctors by CPSO number
         const searchedCodes = new Set();
         let postalCodesToSearch = [...basePostalCodes];
         
@@ -171,7 +172,22 @@ class ParallelCPSOSearcher {
                             this.debugLogged = true;
                         }
                         
-                        allDoctors.push(...parsedDoctors);
+                        // Deduplicate by CPSO number
+                        let duplicatesSkipped = 0;
+                        for (const doctor of parsedDoctors) {
+                            if (doctor.cpsonumber && !seenCPSONumbers.has(doctor.cpsonumber)) {
+                                seenCPSONumbers.add(doctor.cpsonumber);
+                                allDoctors.push(doctor);
+                            } else if (!doctor.cpsonumber) {
+                                // If no CPSO number, include anyway (shouldn't happen but safer)
+                                allDoctors.push(doctor);
+                            } else {
+                                duplicatesSkipped++;
+                            }
+                        }
+                        if (duplicatesSkipped > 0) {
+                            console.log(`    Skipped ${duplicatesSkipped} duplicate doctors from ${result.postalCode}`);
+                        }
                     }
                 } else {
                     console.log(`    ${result.postalCode}: No doctors found`);
@@ -182,6 +198,7 @@ class ParallelCPSOSearcher {
             postalCodesToSearch = codesToExpand;
         }
         
+        console.log(`Total unique doctors found: ${allDoctors.length} (${seenCPSONumbers.size} with CPSO numbers)`);
         return allDoctors;
     }
 }

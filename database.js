@@ -30,7 +30,7 @@ async function initDatabase() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 specialty TEXT,
-                address TEXT NOT NULL UNIQUE,
+                address TEXT NOT NULL,
                 phone TEXT,
                 languages TEXT,
                 status TEXT,
@@ -147,27 +147,26 @@ async function saveDoctorsBatch(doctors) {
         const startTime = Date.now();
         await db.run('BEGIN TRANSACTION');
         
-        // Get all addresses we're about to process
-        const addresses = doctors.map(d => d.address);
+        // Create a composite key for uniquely identifying doctors (name + address)
+        const getDoctorKey = (doc) => `${doc.name}|${doc.address}`;
+        
+        // Get all existing doctors we might update
+        const doctorKeys = doctors.map(d => getDoctorKey(d));
         
         // Fetch existing doctors in batches (SQLite has parameter limit)
         const BATCH_SIZE = 500;
         const existingMap = new Map();
         
-        for (let i = 0; i < addresses.length; i += BATCH_SIZE) {
-            const batch = addresses.slice(i, i + BATCH_SIZE);
-            const placeholders = batch.map(() => '?').join(',');
-            
-            const existingDoctors = await db.all(
-                `SELECT name, specialty, address, phone, languages, status, cpso_number, postal_code 
-                 FROM doctors WHERE address IN (${placeholders})`,
-                batch
-            );
-            
-            existingDoctors.forEach(doc => {
-                existingMap.set(doc.address, doc);
-            });
-        }
+        // We need to check by name AND address combo since multiple doctors can share an address
+        const existingDoctors = await db.all(
+            `SELECT name, specialty, address, phone, languages, status, cpso_number, postal_code 
+             FROM doctors`
+        );
+        
+        existingDoctors.forEach(doc => {
+            const key = getDoctorKey(doc);
+            existingMap.set(key, doc);
+        });
         
         let inserted = 0, updated = 0, skipped = 0;
         const updateBatch = [];
@@ -180,7 +179,8 @@ async function saveDoctorsBatch(doctors) {
                 continue;
             }
             
-            const existing = existingMap.get(doctor.address);
+            const doctorKey = getDoctorKey(doctor);
+            const existing = existingMap.get(doctorKey);
             
             if (!existing) {
                 insertBatch.push(doctor);
@@ -220,20 +220,20 @@ async function saveDoctorsBatch(doctors) {
         if (updateBatch.length > 0) {
             const updateStmt = await db.prepare(
                 `UPDATE doctors SET
-                 name = ?, specialty = ?, phone = ?, languages = ?, 
+                 specialty = ?, phone = ?, languages = ?, 
                  status = ?, cpso_number = ?, postal_code = ?, updated_at = CURRENT_TIMESTAMP
-                 WHERE address = ?`
+                 WHERE name = ? AND address = ?`
             );
             
             for (const doctor of updateBatch) {
                 await updateStmt.run(
-                    doctor.name,
                     doctor.specialty,
                     doctor.phone,
                     doctor.languages,
                     doctor.status,
                     doctor.cpsoNumber,
                     doctor.searchPostalCode || null,
+                    doctor.name,
                     doctor.address
                 );
             }
