@@ -360,7 +360,6 @@ function parseJSONResults(data) {
                     result.postalcode
                 ].filter(Boolean).join(', '),
                 phone: result.phonenumber || '',
-                languages: result.languages || 'Not specified',
                 status: result.status || 'Active',
                 cpsoNumber: result.cpsonumber || ''
             };
@@ -391,7 +390,6 @@ function parseSearchResults(html) {
             specialty: elem.querySelector('.specialty')?.textContent?.trim() || 'General Practice',
             address: elem.querySelector('.address')?.textContent?.trim() || '',
             phone: elem.querySelector('.phone')?.textContent?.trim() || '',
-            languages: elem.querySelector('.languages')?.textContent?.trim() || 'English',
             status: elem.querySelector('.status')?.textContent?.trim() || 'Active',
             cpsoNumber: elem.querySelector('.cpso-number')?.textContent?.trim() || '',
         };
@@ -631,10 +629,6 @@ function displayResults(doctors) {
                 <div class="info-row">
                     <span class="info-label">Phone:</span>
                     <span>${doctor.phone}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Languages:</span>
-                    <span>${doctor.languages}</span>
                 </div>
                 ${doctor.cpsoNumber ? `
                 <div class="info-row">
