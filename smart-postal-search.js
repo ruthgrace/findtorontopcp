@@ -4,14 +4,19 @@ const fetch = require('node-fetch');
  * Search CPSO API with a postal code
  * Returns { totalcount: number, results: array }
  */
-async function searchCPSO(postalCode, doctorType = 'Any', language = 'ENGLISH') {
+async function searchCPSO(postalCode, doctorType = 'Any', specialistType = null, language = 'ENGLISH') {
+    let body = `postalCode=${encodeURIComponent(postalCode)}&doctorType=${doctorType}&LanguagesSelected=${language}`;
+    if (specialistType) {
+        body += `&SpecialistType=${encodeURIComponent(specialistType)}`;
+    }
+    
     const response = await fetch('https://register.cpso.on.ca/Get-Search-Results/', {
         method: 'POST',
         headers: {
             'content-type': 'application/x-www-form-urlencoded',
             'x-requested-with': 'XMLHttpRequest'
         },
-        body: `postalCode=${encodeURIComponent(postalCode)}&doctorType=${doctorType}&LanguagesSelected=${language}`
+        body: body
     });
     
     return await response.json();
@@ -21,7 +26,7 @@ async function searchCPSO(postalCode, doctorType = 'Any', language = 'ENGLISH') 
  * Smart search that expands postal codes when too many results
  * Returns array of all doctors found
  */
-async function smartPostalSearch(basePostalCode, doctorType = 'Any', language = 'ENGLISH') {
+async function smartPostalSearch(basePostalCode, doctorType = 'Any', specialistType = null, language = 'ENGLISH') {
     const allDoctors = [];
     const postalCodesToSearch = [basePostalCode];
     const searchedCodes = new Set();
@@ -34,7 +39,7 @@ async function smartPostalSearch(basePostalCode, doctorType = 'Any', language = 
         searchedCodes.add(code);
         
         console.log(`Searching: ${code}`);
-        const result = await searchCPSO(code, doctorType, language);
+        const result = await searchCPSO(code, doctorType, specialistType, language);
         
         if (result.totalcount === -1) {
             // Too many results, need to expand

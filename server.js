@@ -134,8 +134,8 @@ app.get('/api/geocode', async (req, res) => {
 // Smart search endpoint that handles >100 results by expanding postal codes
 app.post('/api/smart-search', async (req, res) => {
     try {
-        const { postalCode, doctorType, language } = req.body;
-        console.log('Smart search for:', postalCode);
+        const { postalCode, doctorType, specialistType, language } = req.body;
+        console.log('Smart search for:', postalCode, 'Type:', doctorType, 'Specialist:', specialistType);
         
         const allDoctors = [];
         const postalCodesToSearch = [postalCode];
@@ -150,6 +150,9 @@ app.post('/api/smart-search', async (req, res) => {
             const searchParams = new URLSearchParams();
             searchParams.append('postalCode', code);
             searchParams.append('doctorType', doctorType || 'Any');
+            if (specialistType) {
+                searchParams.append('SpecialistType', specialistType);
+            }
             searchParams.append('LanguagesSelected', language || 'ENGLISH');
             
             console.log(`  Searching: ${code}`);

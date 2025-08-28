@@ -196,9 +196,19 @@ async function handleSearch(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
-    const doctorType = formData.get('doctorType');
+    const doctorTypeRaw = formData.get('doctorType');
     const language = formData.get('language');
     const maxDistance = parseFloat(formData.get('maxDistance'));
+    
+    // Parse the doctor type selection
+    let doctorType = 'Any';
+    let specialistType = null;
+    if (doctorTypeRaw.startsWith('Specialist:')) {
+        doctorType = 'Specialist';
+        specialistType = doctorTypeRaw.substring('Specialist:'.length);
+    } else {
+        doctorType = doctorTypeRaw;
+    }
     const selectedLat = formData.get('selectedLat');
     const selectedLng = formData.get('selectedLng');
     
@@ -243,6 +253,9 @@ async function handleSearch(e) {
                 const searchParams = new URLSearchParams();
                 searchParams.append('postalCode', pc.code.replace(' ', '+'));
                 searchParams.append('doctorType', doctorType);
+                if (specialistType) {
+                    searchParams.append('SpecialistType', specialistType);
+                }
                 searchParams.append('LanguagesSelected', language);
                 
                 const response = await fetch('/api/search', {
@@ -285,6 +298,7 @@ async function handleSearch(e) {
                             body: JSON.stringify({
                                 postalCode: pc.code,
                                 doctorType: doctorType,
+                                specialistType: specialistType,
                                 language: language
                             })
                         });
@@ -315,12 +329,13 @@ async function handleSearch(e) {
         console.log(`Found ${allDoctorsResults.length} doctors total`);
         
         if (allDoctorsResults.length === 0) {
-            displayError('No doctors found in the selected postal codes. The CPSO API may have changed or there may be no doctors in this area.');
+            const typeMessage = specialistType ? specialistType : (doctorType === 'Family Doctor' ? 'family doctors' : 'doctors');
+            displayError(`No ${typeMessage} found in the selected postal codes.`);
             showLoading(false);
             return;
         }
         
-        // Save ALL doctors to database before filtering (async, don't wait)
+        // Save ALL doctors to database (async, don't wait)
         if (allDoctorsResults.length > 0) {
             saveDoctorsToDatabase(allDoctorsResults);
         }
