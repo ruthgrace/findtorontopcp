@@ -442,6 +442,36 @@ async function getCoordinatesFromAddress(address) {
     return null;
 }
 
+async function geocodeAddressBatch(addresses, batchSize = 10) {
+    const results = {};
+    
+    // Process in batches to parallelize requests
+    for (let i = 0; i < addresses.length; i += batchSize) {
+        const batch = addresses.slice(i, i + batchSize);
+        const promises = batch.map(address => 
+            fetch(`/api/geocode-address?address=${encodeURIComponent(address)}`)
+                .then(response => response.json())
+                .then(data => ({ address, coords: data }))
+                .catch(error => {
+                    console.error('Geocoding error for:', address, error);
+                    return { address, coords: null };
+                })
+        );
+        
+        const batchResults = await Promise.all(promises);
+        for (const result of batchResults) {
+            results[result.address] = result.coords;
+        }
+        
+        // Small delay between batches to avoid overwhelming the server
+        if (i + batchSize < addresses.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+    
+    return results;
+}
+
 async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
     // Filter out doctors with invalid addresses and collect unique addresses
     const validDoctors = doctors.filter(d => d.address && typeof d.address === 'string' && d.address.trim());
@@ -450,18 +480,22 @@ async function enrichDoctorsWithDistance(doctors, userCoords, maxDistance) {
     // Filter addresses that aren't already cached
     const uncachedAddresses = uniqueAddresses.filter(addr => !geocodeCache[addr]);
     
-    // Geocode all uncached addresses individually
+    // Geocode all uncached addresses in parallel batches
     if (uncachedAddresses.length > 0) {
-        console.log(`Geocoding ${uncachedAddresses.length} uncached addresses...`);
+        console.log(`Geocoding ${uncachedAddresses.length} uncached addresses in parallel...`);
+        const startTime = Date.now();
         
-        for (const address of uncachedAddresses) {
-            const coords = await getCoordinatesFromAddress(address);
+        const geocodedResults = await geocodeAddressBatch(uncachedAddresses, 10);
+        
+        // Update cache with results
+        for (const [address, coords] of Object.entries(geocodedResults)) {
             if (coords) {
                 geocodeCache[address] = coords;
             }
         }
         
-        console.log(`Geocoding complete. Total cached addresses: ${Object.keys(geocodeCache).length}`);
+        const duration = Date.now() - startTime;
+        console.log(`Geocoding complete in ${duration}ms. Total cached addresses: ${Object.keys(geocodeCache).length}`);
     }
     
     // Now calculate distances using cached coordinates - only for valid doctors
@@ -631,9 +665,54 @@ async function loadFSABoundaries() {
         const data = await response.json();
         fsaBoundaries = data;
         console.log(`Loaded ${fsaBoundaries.features.length} FSA boundaries`);
+        
+        // Pre-compute bounding boxes for faster intersection checks
+        computeFSABoundingBoxes();
     } catch (error) {
         console.error('Error loading FSA boundaries:', error);
     }
+}
+
+// Pre-compute bounding boxes for all FSA boundaries when they're loaded
+function computeFSABoundingBoxes() {
+    if (!fsaBoundaries || !fsaBoundaries.features) return;
+    
+    console.log('Computing bounding boxes for FSA boundaries...');
+    const startTime = Date.now();
+    
+    for (const feature of fsaBoundaries.features) {
+        // turf.bbox returns [minX, minY, maxX, maxY] = [minLng, minLat, maxLng, maxLat]
+        const bbox = turf.bbox(feature);
+        feature.properties.bbox = {
+            minLng: bbox[0],
+            minLat: bbox[1],
+            maxLng: bbox[2],
+            maxLat: bbox[3]
+        };
+    }
+    
+    const duration = Date.now() - startTime;
+    console.log(`Computed ${fsaBoundaries.features.length} bounding boxes in ${duration}ms`);
+}
+
+// Fast bounding box intersection check
+function bboxIntersectsCircle(bbox, centerLat, centerLng, radiusKm) {
+    // Convert radius to approximate degrees (1 degree latitude ≈ 111km)
+    const radiusDeg = radiusKm / 111;
+    
+    // Create bounding box for the circle
+    const circleBbox = {
+        minLat: centerLat - radiusDeg,
+        maxLat: centerLat + radiusDeg,
+        minLng: centerLng - radiusDeg / Math.cos(centerLat * Math.PI / 180),
+        maxLng: centerLng + radiusDeg / Math.cos(centerLat * Math.PI / 180)
+    };
+    
+    // Check if bounding boxes overlap
+    return !(bbox.maxLat < circleBbox.minLat || 
+             bbox.minLat > circleBbox.maxLat ||
+             bbox.maxLng < circleBbox.minLng || 
+             bbox.minLng > circleBbox.maxLng);
 }
 
 function findPostalCodesWithinRadius(centerLat, centerLng, radiusKm) {
@@ -661,58 +740,53 @@ function findPostalCodesWithinRadius(centerLat, centerLng, radiusKm) {
         return postalCodesInRadius;
     }
     
+    // Ensure bounding boxes are computed
+    if (fsaBoundaries.features[0] && !fsaBoundaries.features[0].properties.bbox) {
+        computeFSABoundingBoxes();
+    }
+    
     // Use Turf.js to check FSA boundary intersections
     const searchPoint = turf.point([centerLng, centerLat]);
     const searchCircle = turf.circle(searchPoint, radiusKm, { units: 'kilometers' });
     
     console.log('Search point:', [centerLng, centerLat]);
     console.log('Search circle created with radius:', radiusKm, 'km');
-    console.log('Number of FSA features:', fsaBoundaries.features.length);
-    
-    // Check first few FSAs for debugging
-    if (fsaBoundaries.features.length > 0) {
-        console.log('Sample FSA:', fsaBoundaries.features[0].properties.fsa);
-        console.log('Sample FSA geometry type:', fsaBoundaries.features[0].geometry.type);
-    }
     
     const fsasInRadius = new Set();
     const postalCodesInRadius = [];
+    let bboxChecks = 0;
+    let polygonChecks = 0;
     
     // First, find all FSAs that intersect with the search radius
     for (const feature of fsaBoundaries.features) {
-        // Check if the search circle intersects with the FSA boundary
+        bboxChecks++;
+        
+        // Quick bounding box check first
+        if (!bboxIntersectsCircle(feature.properties.bbox, centerLat, centerLng, radiusKm)) {
+            continue; // Skip expensive polygon check if bounding boxes don't overlap
+        }
+        
+        // Only do expensive polygon intersection if bounding boxes overlap
+        polygonChecks++;
         try {
             const intersects = turf.booleanIntersects(searchCircle, feature);
             
             if (intersects) {
-                console.log('FSA intersects:', feature.properties.fsa);
                 fsasInRadius.add(feature.properties.fsa);
-            }
-            
-            // For debugging: check distance to closest FSAs
-            if (feature.properties.fsa && (feature.properties.fsa === 'M2M' || feature.properties.fsa === 'M2N' || feature.properties.fsa === 'M2R')) {
-                const centroid = turf.centroid(feature);
-                const distance = turf.distance(searchPoint, centroid, { units: 'kilometers' });
-                console.log(`Distance to ${feature.properties.fsa}: ${distance.toFixed(2)} km`);
             }
         } catch (error) {
             console.error('Error checking intersection for FSA:', feature.properties.fsa, error);
         }
     }
     
+    console.log(`Bounding box checks: ${bboxChecks}, Polygon checks: ${polygonChecks} (${Math.round(100 * polygonChecks / bboxChecks)}%)`);
     console.log('FSAs found within radius:', Array.from(fsasInRadius));
     
     // Now include all FSAs found in the radius
-    // Since we only have FSA-level data, use those directly
     const addedFSAs = new Set();
-    console.log(`Checking ${torontoPostalCodes.length} postal codes against ${fsasInRadius.size} FSAs`);
-    if (torontoPostalCodes.length > 0) {
-        console.log('Sample postal code:', torontoPostalCodes[0]);
-    }
     for (const postalCode of torontoPostalCodes) {
         // Check if this FSA code is in our radius
         if (fsasInRadius.has(postalCode.code) && !addedFSAs.has(postalCode.code)) {
-            console.log(`Matched FSA: ${postalCode.code}`);
             const distance = calculateDistance(centerLat, centerLng, postalCode.lat, postalCode.lng);
             // Use the FSA code directly (it's already 3 characters)
             postalCodesInRadius.push({
