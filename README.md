@@ -123,8 +123,8 @@ Downtown/Central Core:
 [done] 100 Queen Street West, Toronto
 [done] 1 Blue Jays Way, Toronto
 [done] 500 Lake Shore Boulevard West, Toronto
-5000 Yonge Street, North York
-3401 Dufferin Street, North York
+[done] 5000 Yonge Street, North York
+[done] 3401 Dufferin Street, North York
 2901 Bayview Avenue, North York
 1967 Danforth Avenue, Toronto
 2200 Eglinton Avenue East, Scarborough
