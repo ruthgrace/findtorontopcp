@@ -88,6 +88,14 @@ document.addEventListener('DOMContentLoaded', function() {
             sortResults(this.dataset.sort);
         });
     });
+    
+    // Gender filter functionality
+    const genderFilter = document.getElementById('genderFilter');
+    if (genderFilter) {
+        genderFilter.addEventListener('change', function() {
+            filterAndDisplayResults();
+        });
+    }
 });
 
 async function fetchAddressSuggestions(query) {
@@ -313,6 +321,7 @@ async function handleSearch(e) {
             phone: doc.phonenumber || '',  // Map phonenumber to phone
             status: doc.registrationstatus || 'Active',
             cpsoNumber: doc.cpsonumber || '',
+            gender: doc.gender,  // Include gender data from API
             distance: doc.distance,
             coordinates: doc.coordinates,
             searchPostalCode: doc.searchPostalCode
@@ -331,6 +340,14 @@ async function handleSearch(e) {
         
         allDoctors = doctorsWithDistance;
         displayResults(doctorsWithDistance);
+        
+        // Update the gender filter and start background gender fetching
+        updateGenderFilter(allDoctors);
+        
+        // Start background gender enhancement after a short delay
+        setTimeout(() => {
+            startGenderEnhancement();
+        }, 500);
         
         if (doctorsWithDistance.length > 0) {
             document.getElementById('filtersSection').style.display = 'block';
@@ -654,6 +671,10 @@ function displayResults(doctors) {
                     <span>${doctor.cpsoNumber}</span>
                 </div>
                 ` : ''}
+                <div class="info-row">
+                    <span class="info-label">Gender:</span>
+                    <span class="gender-display" data-cpso="${doctor.cpsoNumber || ''}">${getGenderDisplay(doctor.gender)}</span>
+                </div>
             </div>
         </div>
     `).join('');
@@ -983,5 +1004,152 @@ async function getDatabaseStats() {
         console.error('Error getting database stats:', error);
     }
     return null;
+}
+
+// Gender-related functions
+function getGenderDisplay(gender) {
+    if (!gender || gender === null || gender === '') {
+        return 'Data still processing...';
+    }
+    return gender;
+}
+
+function updateGenderFilter(doctors) {
+    const genderFilter = document.getElementById('genderFilter');
+    if (!genderFilter) return;
+    
+    const currentValue = genderFilter.value; // Preserve selection
+    
+    // Get unique gender values from current results
+    const genders = new Set();
+    let hasProcessing = false;
+    
+    doctors.forEach(doctor => {
+        if (doctor.gender === null || doctor.gender === '' || !doctor.gender) {
+            hasProcessing = true;
+        } else {
+            genders.add(doctor.gender);
+        }
+    });
+    
+    // Rebuild filter options
+    genderFilter.innerHTML = '<option value="">All Genders</option>';
+    
+    // Add actual gender options (sorted)
+    Array.from(genders).sort().forEach(gender => {
+        const option = document.createElement('option');
+        option.value = gender;
+        option.textContent = gender;
+        genderFilter.appendChild(option);
+    });
+    
+    // Add "Data still processing" if there are null values
+    if (hasProcessing) {
+        const option = document.createElement('option');
+        option.value = 'processing';
+        option.textContent = 'Data still processing...';
+        genderFilter.appendChild(option);
+    }
+    
+    // Restore previous selection if still valid
+    if (currentValue && [...genderFilter.options].some(opt => opt.value === currentValue)) {
+        genderFilter.value = currentValue;
+    }
+}
+
+function filterAndDisplayResults() {
+    const genderFilter = document.getElementById('genderFilter');
+    const selectedGender = genderFilter ? genderFilter.value : '';
+    
+    let filtered = [...allDoctors];
+    
+    // Apply gender filter
+    if (selectedGender) {
+        if (selectedGender === 'processing') {
+            filtered = filtered.filter(doctor => 
+                doctor.gender === null || doctor.gender === '' || !doctor.gender
+            );
+        } else {
+            filtered = filtered.filter(doctor => doctor.gender === selectedGender);
+        }
+    }
+    
+    // Apply current sorting
+    const activeSortBtn = document.querySelector('.sort-btn.active');
+    const sortBy = activeSortBtn ? activeSortBtn.dataset.sort : 'distance';
+    
+    if (sortBy === 'distance') {
+        filtered.sort((a, b) => {
+            if (a.distance === null) return 1;
+            if (b.distance === null) return -1;
+            return a.distance - b.distance;
+        });
+    } else if (sortBy === 'name') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    
+    displayResults(filtered);
+}
+
+// Background gender fetching
+async function startGenderEnhancement() {
+    // Only start if we have doctors with missing gender
+    const doctorsNeedingGender = allDoctors.filter(d => 
+        d.cpsoNumber && (!d.gender || d.gender === null || d.gender === '')
+    );
+    
+    if (doctorsNeedingGender.length === 0) {
+        console.log('All doctors already have gender data');
+        return;
+    }
+    
+    console.log(`Starting background gender fetching for ${doctorsNeedingGender.length} doctors...`);
+    
+    // Process in small batches to avoid overwhelming the server
+    const BATCH_SIZE = 3;
+    const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds
+    
+    for (let i = 0; i < doctorsNeedingGender.length; i += BATCH_SIZE) {
+        const batch = doctorsNeedingGender.slice(i, i + BATCH_SIZE);
+        
+        // Process batch in parallel
+        await Promise.allSettled(batch.map(async (doctor) => {
+            try {
+                const response = await fetch(`/api/doctor-gender/${doctor.cpsoNumber}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update the doctor object in our local array
+                    const doctorIndex = allDoctors.findIndex(d => d.cpsoNumber === doctor.cpsoNumber);
+                    if (doctorIndex !== -1) {
+                        allDoctors[doctorIndex].gender = data.gender;
+                        
+                        // Update the UI for this specific doctor
+                        updateDoctorGenderInUI(doctor.cpsoNumber, data.gender);
+                    }
+                }
+            } catch (error) {
+                console.log(`Failed to get gender for CPSO #${doctor.cpsoNumber}:`, error.message);
+            }
+        }));
+        
+        // Update the gender filter after each batch
+        updateGenderFilter(allDoctors);
+        
+        // Rate limiting - wait between batches
+        if (i + BATCH_SIZE < doctorsNeedingGender.length) {
+            await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        }
+    }
+    
+    console.log('Background gender fetching completed');
+}
+
+// Update gender display for a specific doctor in the UI
+function updateDoctorGenderInUI(cpsoNumber, gender) {
+    const genderSpan = document.querySelector(`[data-cpso="${cpsoNumber}"]`);
+    if (genderSpan) {
+        genderSpan.textContent = getGenderDisplay(gender);
+    }
 }
 

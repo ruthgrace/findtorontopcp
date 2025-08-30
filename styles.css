@@ -220,9 +220,17 @@ header h1 {
     padding: 20px;
     margin-bottom: 30px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
 }
 
-.filters-section h3 {
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group h3 {
     color: #2C3E50;
     margin-bottom: 15px;
     font-size: 1.1rem;

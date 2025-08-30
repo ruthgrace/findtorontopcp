@@ -7,6 +7,7 @@ const db = require('./database');
 const { GOOGLE_MAPS_API_KEY } = require('./constants');
 const ParallelCPSOSearcher = require('./parallel-cpso-search');
 const ParallelGeocoder = require('./parallel-geocoder');
+const { fetchGenderFromCPSO } = require('./gender-fetcher');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -209,34 +210,81 @@ app.post('/api/smart-search', async (req, res) => {
 app.post('/api/parallel-search', async (req, res) => {
     try {
         const { postalCodes, doctorType, specialistType, language } = req.body;
-        console.log(`Parallel search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
+        console.log(`Hybrid search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
         
+        const startTime = Date.now();
+        
+        // Step 1: Always get fresh data from CPSO (definitive doctor list)
+        console.log('Fetching fresh data from CPSO...');
         const searcher = new ParallelCPSOSearcher({
-            concurrency: 20,  // Increased from 5 to 20
-            delayBetweenBatches: 0,  // No delay needed
+            concurrency: 20,
+            delayBetweenBatches: 0,
             retryAttempts: 3,
             retryDelay: 1000
         });
         
-        const startTime = Date.now();
-        const allDoctors = await searcher.smartSearchWithParallel(
+        const cpsoDoctors = await searcher.smartSearchWithParallel(
             postalCodes,
             doctorType || 'Any',
             specialistType,
             language || 'ENGLISH'
         );
-        const duration = Date.now() - startTime;
         
-        console.log(`Parallel search completed in ${duration}ms, found ${allDoctors.length} doctors`);
+        console.log(`Found ${cpsoDoctors.length} doctors from CPSO`);
+        
+        // Step 2: Get existing doctors from database for gender data
+        // Extract CPSO numbers from the CPSO API results
+        const cpsoNumbers = cpsoDoctors.map(d => d.cpsonumber || d.cpsoNumber).filter(n => n);
+        const existingDoctors = await db.getDoctorsByCpsoNumbers(cpsoNumbers);
+        console.log(`Found ${existingDoctors.length} doctors in database`);
+        
+        // Step 3: Create lookup map for existing database doctors (by CPSO number)
+        const databaseMap = new Map();
+        existingDoctors.forEach(doctor => {
+            if (doctor.cpsoNumber) {
+                databaseMap.set(doctor.cpsoNumber, doctor);
+            }
+        });
+        
+        // Step 4: Enhance CPSO doctors with database data (especially gender)
+        const finalDoctors = cpsoDoctors.map(cpsoDoctor => {
+            const cpsoNumber = cpsoDoctor.cpsonumber || cpsoDoctor.cpsoNumber;
+            const existingDoctor = databaseMap.get(cpsoNumber);
+            
+            // If we have this doctor in database, use their gender data
+            if (existingDoctor) {
+                return {
+                    ...cpsoDoctor,
+                    gender: existingDoctor.gender // Add gender from database
+                };
+            }
+            
+            // New doctor, no gender data yet
+            return cpsoDoctor;
+        });
+        
+        // Step 5: Save/update all doctors to database (with gender data preserved)
+        console.log(`Saving ${finalDoctors.length} doctors to database...`);
+        await db.saveDoctorsBatch(finalDoctors);
+        
+        const duration = Date.now() - startTime;
+        const doctorsWithGender = finalDoctors.filter(d => d.gender && d.gender !== null).length;
+        
+        console.log(`Search completed in ${duration}ms:`);
+        console.log(`  - ${cpsoDoctors.length} doctors from CPSO (definitive list)`);
+        console.log(`  - ${doctorsWithGender} doctors have gender data from database`);
+        console.log(`  - ${finalDoctors.length - doctorsWithGender} doctors need gender fetching`);
         
         const response = { 
-            totalcount: allDoctors.length, 
-            results: allDoctors,
-            searchTime: duration 
+            totalcount: finalDoctors.length, 
+            results: finalDoctors,
+            searchTime: duration,
+            withGender: doctorsWithGender,
+            needsGender: finalDoctors.length - doctorsWithGender
         };
         
         const responseSize = JSON.stringify(response).length;
-        console.log(`Sending response: ${responseSize} bytes, ${allDoctors.length} doctors`);
+        console.log(`Sending response: ${responseSize} bytes, ${finalDoctors.length} doctors`);
         
         res.json(response);
     } catch (error) {
@@ -334,6 +382,111 @@ app.get('/api/stats', async (req, res) => {
     } catch (error) {
         console.error('Error getting stats:', error);
         res.status(500).json({ error: 'Failed to get statistics' });
+    }
+});
+
+// Gender API endpoint
+app.get('/api/doctor-gender/:cpsoNumber', async (req, res) => {
+    try {
+        const { cpsoNumber } = req.params;
+        
+        if (!cpsoNumber) {
+            return res.status(400).json({ error: 'CPSO number is required' });
+        }
+        
+        console.log(`Fetching gender for CPSO #${cpsoNumber}`);
+        
+        // Fetch gender from CPSO website
+        const gender = await fetchGenderFromCPSO(cpsoNumber);
+        
+        // Save to database if we got a valid result
+        if (gender && !gender.startsWith('Unknown')) {
+            try {
+                await db.updateDoctorGender(cpsoNumber, gender);
+                console.log(`Updated gender for CPSO #${cpsoNumber}: ${gender}`);
+            } catch (dbError) {
+                console.error(`Error updating database for CPSO #${cpsoNumber}:`, dbError);
+                // Don't fail the request if database update fails
+            }
+        }
+        
+        res.json({ cpsoNumber, gender });
+        
+    } catch (error) {
+        console.error('Error fetching gender:', error);
+        res.status(500).json({ error: 'Failed to fetch gender data' });
+    }
+});
+
+// Batch gender endpoint for better parallelization
+app.post('/api/doctors-gender', async (req, res) => {
+    try {
+        const { cpsoNumbers } = req.body;
+        
+        if (!cpsoNumbers || !Array.isArray(cpsoNumbers) || cpsoNumbers.length === 0) {
+            return res.status(400).json({ error: 'cpsoNumbers array is required' });
+        }
+        
+        if (cpsoNumbers.length > 10) {
+            return res.status(400).json({ error: 'Maximum 10 CPSO numbers per batch' });
+        }
+        
+        console.log(`Batch fetching gender for ${cpsoNumbers.length} doctors`);
+        
+        // Process with controlled concurrency and backoff
+        const results = [];
+        const BATCH_SIZE = 10; // Increased parallelism for faster processing
+        
+        for (let i = 0; i < cpsoNumbers.length; i += BATCH_SIZE) {
+            const batch = cpsoNumbers.slice(i, i + BATCH_SIZE);
+            
+            const batchResults = await Promise.allSettled(
+                batch.map(async (cpsoNumber) => {
+                    try {
+                        const gender = await fetchGenderFromCPSO(cpsoNumber);
+                        
+                        // Save to database if valid
+                        if (gender && !gender.startsWith('Unknown')) {
+                            try {
+                                await db.updateDoctorGender(cpsoNumber, gender);
+                            } catch (dbError) {
+                                console.error(`DB error for CPSO #${cpsoNumber}:`, dbError);
+                            }
+                        }
+                        
+                        return { cpsoNumber, gender, success: true };
+                    } catch (error) {
+                        console.error(`Error fetching gender for CPSO #${cpsoNumber}:`, error);
+                        return { cpsoNumber, gender: 'Unknown - Fetch error', success: false };
+                    }
+                })
+            );
+            
+            // Collect results
+            batchResults.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    results.push(result.value);
+                } else {
+                    results.push({ 
+                        cpsoNumber: 'unknown', 
+                        gender: 'Unknown - Processing error', 
+                        success: false 
+                    });
+                }
+            });
+            
+            // Small delay between batches
+            if (i + BATCH_SIZE < cpsoNumbers.length) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        console.log(`Batch gender fetch complete: ${results.length} processed`);
+        res.json({ results, totalProcessed: results.length });
+        
+    } catch (error) {
+        console.error('Error in batch gender fetch:', error);
+        res.status(500).json({ error: 'Failed to fetch batch gender data' });
     }
 });
 

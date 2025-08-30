@@ -130,7 +130,7 @@ async function saveDoctor(doctorData) {
                 doctorData.phone,
                 doctorData.languages,
                 doctorData.status,
-                doctorData.cpsoNumber,
+                doctorData.cpsoNumber || doctorData.cpsonumber,
                 doctorData.searchPostalCode || null
             ]
         );
@@ -197,8 +197,8 @@ async function saveDoctorsBatch(doctors) {
         if (insertBatch.length > 0) {
             const insertStmt = await db.prepare(
                 `INSERT INTO doctors 
-                 (name, specialty, address, phone, languages, status, cpso_number, postal_code, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+                 (name, specialty, address, phone, languages, status, cpso_number, postal_code, gender, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
             );
             
             for (const doctor of insertBatch) {
@@ -209,8 +209,9 @@ async function saveDoctorsBatch(doctors) {
                     doctor.phone,
                     doctor.languages,
                     doctor.status,
-                    doctor.cpsoNumber,
-                    doctor.searchPostalCode || null
+                    doctor.cpsoNumber || doctor.cpsonumber,
+                    doctor.searchPostalCode || null,
+                    doctor.gender || null
                 );
             }
             await insertStmt.finalize();
@@ -218,26 +219,47 @@ async function saveDoctorsBatch(doctors) {
         
         // Batch updates
         if (updateBatch.length > 0) {
-            const updateStmt = await db.prepare(
-                `UPDATE doctors SET
-                 specialty = ?, phone = ?, languages = ?, 
-                 status = ?, cpso_number = ?, postal_code = ?, updated_at = CURRENT_TIMESTAMP
-                 WHERE name = ? AND address = ?`
-            );
-            
+            // Prepare different update statements based on whether we have gender data
             for (const doctor of updateBatch) {
-                await updateStmt.run(
-                    doctor.specialty,
-                    doctor.phone,
-                    doctor.languages,
-                    doctor.status,
-                    doctor.cpsoNumber,
-                    doctor.searchPostalCode || null,
-                    doctor.name,
-                    doctor.address
-                );
+                if (doctor.gender && doctor.gender !== '') {
+                    // Update including gender (when we have new gender data)
+                    await db.run(
+                        `UPDATE doctors SET
+                         specialty = ?, phone = ?, languages = ?, 
+                         status = ?, cpso_number = ?, postal_code = ?, gender = ?, updated_at = CURRENT_TIMESTAMP
+                         WHERE name = ? AND address = ?`,
+                        [
+                            doctor.specialty,
+                            doctor.phone,
+                            doctor.languages,
+                            doctor.status,
+                            doctor.cpsoNumber || doctor.cpsonumber,
+                            doctor.searchPostalCode || null,
+                            doctor.gender,
+                            doctor.name,
+                            doctor.address
+                        ]
+                    );
+                } else {
+                    // Update without touching gender (preserve existing gender data)
+                    await db.run(
+                        `UPDATE doctors SET
+                         specialty = ?, phone = ?, languages = ?, 
+                         status = ?, cpso_number = ?, postal_code = ?, updated_at = CURRENT_TIMESTAMP
+                         WHERE name = ? AND address = ?`,
+                        [
+                            doctor.specialty,
+                            doctor.phone,
+                            doctor.languages,
+                            doctor.status,
+                            doctor.cpsoNumber || doctor.cpsonumber,
+                            doctor.searchPostalCode || null,
+                            doctor.name,
+                            doctor.address
+                        ]
+                    );
+                }
             }
-            await updateStmt.finalize();
         }
         
         await db.run('COMMIT');
@@ -255,12 +277,19 @@ async function saveDoctorsBatch(doctors) {
 
 // Helper function to check if doctor data has changed
 function hasDataChanged(existing, newData) {
+    const newCpsoNumber = newData.cpsoNumber || newData.cpsonumber;
+    
+    // Always update if we have a new CPSO number and the existing one is null/empty
+    if (newCpsoNumber && (!existing.cpso_number || existing.cpso_number === '')) {
+        return true;
+    }
+    
     return existing.name !== newData.name ||
            existing.specialty !== newData.specialty ||
            existing.phone !== newData.phone ||
            existing.languages !== newData.languages ||
            existing.status !== newData.status ||
-           existing.cpso_number !== newData.cpsoNumber ||
+           existing.cpso_number !== newCpsoNumber ||
            existing.postal_code !== (newData.searchPostalCode || null);
 }
 
@@ -384,6 +413,171 @@ async function getDatabaseStats() {
     }
 }
 
+// Update doctor gender
+async function updateDoctorGender(cpsoNumber, gender) {
+    try {
+        const result = await db.run(
+            'UPDATE doctors SET gender = ? WHERE cpso_number = ?',
+            [gender, cpsoNumber]
+        );
+        return result;
+    } catch (error) {
+        console.error('Error updating doctor gender:', error);
+        throw error;
+    }
+}
+
+// Get doctors missing gender data
+async function getDoctorsWithoutGender(limit = null) {
+    try {
+        const query = limit 
+            ? 'SELECT cpso_number, name FROM doctors WHERE (gender IS NULL OR gender = "") AND cpso_number IS NOT NULL AND cpso_number != "" LIMIT ?'
+            : 'SELECT cpso_number, name FROM doctors WHERE (gender IS NULL OR gender = "") AND cpso_number IS NOT NULL AND cpso_number != ""';
+        
+        const params = limit ? [limit] : [];
+        const results = await db.all(query, params);
+        return results;
+    } catch (error) {
+        console.error('Error getting doctors without gender:', error);
+        return [];
+    }
+}
+
+
+// Get existing doctors from database by CPSO numbers
+async function getDoctorsByCpsoNumbers(cpsoNumbers) {
+    try {
+        if (!cpsoNumbers || cpsoNumbers.length === 0) {
+            return [];
+        }
+        
+        // Create placeholders for IN clause
+        const placeholders = cpsoNumbers.map(() => '?').join(',');
+        
+        const results = await db.all(
+            `SELECT d.*, g.latitude, g.longitude 
+             FROM doctors d
+             LEFT JOIN geocoding g ON d.address = g.address
+             WHERE d.cpso_number IN (${placeholders})
+             ORDER BY d.name`,
+            cpsoNumbers
+        );
+        
+        return results.map(row => ({
+            name: row.name,
+            cpsonumber: row.cpso_number,
+            cpsoNumber: row.cpso_number,
+            specialties: row.specialty,
+            primaryaddressnotinpractice: false,
+            street1: row.address.split(',')[0] || row.address,
+            city: row.address.includes(',') ? row.address.split(',').slice(-3)[0]?.trim() : '',
+            province: 'Ontario',
+            postalcode: row.postal_code,
+            street2: '',
+            street3: '',
+            street4: '',
+            additionaladdresscount: 0,
+            phonenumber: row.phone || '',
+            fax: '',
+            registrationstatus: row.status || 'Active',
+            mostrecentformername: '',
+            registrationstatuslabel: 'active',
+            address: row.address,
+            gender: row.gender, // Include gender from database
+            searchPostalCode: row.postal_code,
+            coordinates: row.latitude && row.longitude ? {
+                lat: row.latitude,
+                lng: row.longitude
+            } : null,
+            fromDatabase: true // Flag to indicate this came from database
+        }));
+    } catch (error) {
+        console.error('Error getting doctors by CPSO numbers:', error);
+        return [];
+    }
+}
+
+// Get existing doctors from database by postal codes
+async function getDoctorsByPostalCodes(postalCodes) {
+    try {
+        if (!postalCodes || postalCodes.length === 0) {
+            return [];
+        }
+        
+        // Create placeholders for IN clause
+        const placeholders = postalCodes.map(() => '?').join(',');
+        
+        const results = await db.all(
+            `SELECT d.*, g.latitude, g.longitude 
+             FROM doctors d
+             LEFT JOIN geocoding g ON d.address = g.address
+             WHERE d.postal_code IN (${placeholders})
+             ORDER BY d.name`,
+            postalCodes
+        );
+        
+        return results.map(row => ({
+            name: row.name,
+            cpsonumber: row.cpso_number,
+            cpsoNumber: row.cpso_number,
+            specialties: row.specialty,
+            primaryaddressnotinpractice: false,
+            street1: row.address.split(',')[0] || row.address,
+            city: row.address.includes(',') ? row.address.split(',').slice(-3)[0]?.trim() : '',
+            province: 'Ontario',
+            postalcode: row.postal_code,
+            street2: '',
+            street3: '',
+            street4: '',
+            additionaladdresscount: 0,
+            phonenumber: row.phone || '',
+            fax: '',
+            registrationstatus: row.status || 'Active',
+            mostrecentformername: '',
+            registrationstatuslabel: 'active',
+            address: row.address,
+            gender: row.gender, // Include gender from database
+            searchPostalCode: row.postal_code,
+            coordinates: row.latitude && row.longitude ? {
+                lat: row.latitude,
+                lng: row.longitude
+            } : null,
+            fromDatabase: true // Flag to indicate this came from database
+        }));
+    } catch (error) {
+        console.error('Error getting doctors by postal codes:', error);
+        return [];
+    }
+}
+
+// Check which postal codes have NO data in database (simple existence check)
+async function getPostalCodesNeedingUpdate(postalCodes) {
+    try {
+        if (!postalCodes || postalCodes.length === 0) {
+            return postalCodes || [];
+        }
+        
+        const placeholders = postalCodes.map(() => '?').join(',');
+        
+        // Get postal codes that have ANY data in database
+        const existingCodes = await db.all(
+            `SELECT DISTINCT postal_code 
+             FROM doctors 
+             WHERE postal_code IN (${placeholders})`,
+            postalCodes
+        );
+        
+        const existingSet = new Set(existingCodes.map(row => row.postal_code));
+        
+        // Return postal codes that have NO data (need fetching)
+        return postalCodes.filter(code => !existingSet.has(code));
+        
+    } catch (error) {
+        console.error('Error checking postal codes needing update:', error);
+        return postalCodes; // If error, update all
+    }
+}
+
 // Close database connection
 async function closeDatabase() {
     if (db) {
@@ -402,6 +596,11 @@ module.exports = {
     getAllGeocodedAddresses,
     searchDoctorsByPostalCode,
     getDatabaseStats,
+    updateDoctorGender,
+    getDoctorsWithoutGender,
+    getDoctorsByPostalCodes,
+    getDoctorsByCpsoNumbers,
+    getPostalCodesNeedingUpdate,
     closeDatabase,
     hasDataChanged
 };

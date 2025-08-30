@@ -114,10 +114,22 @@
         </section>
 
         <section class="filters-section" id="filtersSection" style="display: none;">
-            <h3>Sort By:</h3>
-            <div class="sort-buttons">
-                <button class="sort-btn active" data-sort="distance">Distance</button>
-                <button class="sort-btn" data-sort="name">Name</button>
+            <div class="filter-group">
+                <h3>Filter By:</h3>
+                <div class="form-group">
+                    <label for="genderFilter">Gender</label>
+                    <select id="genderFilter" name="genderFilter">
+                        <option value="">All Genders</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <h3>Sort By:</h3>
+                <div class="sort-buttons">
+                    <button class="sort-btn active" data-sort="distance">Distance</button>
+                    <button class="sort-btn" data-sort="name">Name</button>
+                </div>
             </div>
         </section>
 
