@@ -1136,6 +1136,9 @@ async function startGenderEnhancement() {
         // Update the gender filter after each batch
         updateGenderFilter(allDoctors);
         
+        // Re-apply current filter to show newly matching doctors
+        filterAndDisplayResults();
+        
         // Rate limiting - wait between batches
         if (i + BATCH_SIZE < doctorsNeedingGender.length) {
             await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
