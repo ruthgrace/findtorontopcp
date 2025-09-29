@@ -132,11 +132,11 @@ Downtown/Central Core:
 
 [done] 2901 Bayview Avenue, North York
 
-1967 Danforth Avenue, Toronto
+[done] 1967 Danforth Avenue, Toronto
 
-2200 Eglinton Avenue East, Scarborough
+[done] 2200 Eglinton Avenue East, Scarborough
 
-4850 Sheppard Avenue East, Scarborough
+[done] 4850 Sheppard Avenue East, Scarborough
 
 2338 Bloor Street West, Toronto
 
