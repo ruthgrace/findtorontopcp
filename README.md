@@ -138,9 +138,9 @@ Downtown/Central Core:
 
 [done] 4850 Sheppard Avenue East, Scarborough
 
-2338 Bloor Street West, Toronto
+[done] 2338 Bloor Street West, Toronto
 
-5230 Dundas Street West, Etobicoke
+[done] 5230 Dundas Street West, Etobicoke
 
 25 The West Mall, Etobicoke
 
