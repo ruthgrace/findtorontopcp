@@ -142,10 +142,10 @@ Downtown/Central Core:
 
 [done] 5230 Dundas Street West, Etobicoke
 
-25 The West Mall, Etobicoke
+[done] 25 The West Mall, Etobicoke
 
-1200 Bay Street, Toronto
+[done] 1200 Bay Street, Toronto
 
-1500 Don Mills Road, Toronto
+[done] 1500 Don Mills Road, Toronto
 
-3000 Lawrence Avenue West, Toronto
+[done] 3000 Lawrence Avenue West, Toronto (used an adjacent address instead since this one doesnt exist)
