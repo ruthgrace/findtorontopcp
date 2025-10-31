@@ -233,7 +233,7 @@ async function handleSearch(e) {
     }
     
     if (!userCoordinates) {
-        displayError('Please select an address.');
+        displayError('Please select a valid address. Start typing an address and wait for address suggestions to load, and select one from the drop down list.');
         return;
     }
     
