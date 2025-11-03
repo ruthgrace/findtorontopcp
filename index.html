@@ -121,6 +121,18 @@
             </section>
         </div>
 
+        <section class="search-summary" id="searchSummary" style="display: none;">
+            <div class="search-summary-content">
+                <div class="search-params">
+                    <span class="param"><strong>Address:</strong> <span id="summaryAddress"></span></span>
+                    <span class="param"><strong>Doctor Type:</strong> <span id="summaryDoctorType"></span></span>
+                    <span class="param"><strong>Max Distance:</strong> <span id="summaryDistance"></span> km</span>
+                    <span class="param"><strong>Language:</strong> <span id="summaryLanguage"></span></span>
+                </div>
+                <button class="new-search-btn" onclick="resetToSearchView()">New Search</button>
+            </div>
+        </section>
+
         <section class="filters-section" id="filtersSection" style="display: none;">
             <div class="filter-group">
                 <h3>Filter By:</h3>

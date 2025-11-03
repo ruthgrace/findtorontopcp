@@ -209,11 +209,12 @@ async function selectAddress(suggestion) {
 
 async function handleSearch(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const doctorTypeRaw = formData.get('doctorType');
     const language = formData.get('language');
     const maxDistance = parseFloat(formData.get('maxDistance'));
+    const addressValue = formData.get('addressSearch');
     
     // Parse the doctor type selection
     let doctorType = 'Any';
@@ -249,7 +250,10 @@ async function handleSearch(e) {
     
     // Store current search coordinates
     lastSearchCoordinates = { lat: userCoordinates.lat, lng: userCoordinates.lng };
-    
+
+    // Switch to results view
+    switchToResultsView(addressValue, doctorTypeRaw, maxDistance, language);
+
     showLoading(true);
     
     try {
@@ -1154,5 +1158,33 @@ function updateDoctorGenderInUI(cpsoNumber, gender) {
     if (genderSpan) {
         genderSpan.textContent = getGenderDisplay(gender);
     }
+}
+
+// Switch to results view
+function switchToResultsView(address, doctorType, distance, language) {
+    // Hide the two-panel main content
+    document.querySelector('.main-content').style.display = 'none';
+
+    // Show and populate the search summary
+    document.getElementById('searchSummary').style.display = 'block';
+    document.getElementById('summaryAddress').textContent = address;
+    document.getElementById('summaryDoctorType').textContent = doctorType.replace('Specialist:', '');
+    document.getElementById('summaryDistance').textContent = distance;
+    document.getElementById('summaryLanguage').textContent = language;
+}
+
+// Reset to search view
+function resetToSearchView() {
+    // Show the two-panel main content
+    document.querySelector('.main-content').style.display = 'grid';
+
+    // Hide search summary, filters, and results
+    document.getElementById('searchSummary').style.display = 'none';
+    document.getElementById('filtersSection').style.display = 'none';
+    document.getElementById('resultsContainer').innerHTML = '';
+
+    // Reset search state
+    allDoctors = [];
+    lastSearchCoordinates = null;
 }
 
