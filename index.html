@@ -8,110 +8,118 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Find Toronto Doctors</h1>
-            <p class="subtitle">Search for healthcare providers near you</p>
-        </header>
+        <div class="main-content">
+            <aside class="info-panel">
+                <h1>Find a Doctor in Toronto</h1>
+                <div class="info-text">
+                    <p>I made this website when I wanted to find a new doctor for a family member, and was shocked that the Health Care Connect provided by the province of Ontario takes over a year to actually connect you to a doctor. The data comes from the College of Physicians and Surgeons of Ontario. You won't be able to see which doctors have openings, but at least you can get a comprehensive list of the doctors near you so you can call them yourself. Good luck.</p>
+                    <p class="signature">-- Ruth</p>
+                </div>
+            </aside>
 
-        <section class="search-section">
-            <form id="searchForm">
-                <div class="form-group">
-                    <label for="addressSearch">Address</label>
-                    <div class="address-search-container">
-                        <input type="text" id="addressSearch" name="addressSearch" placeholder="Enter an address in Toronto..." autocomplete="off" required>
-                        <div id="addressSuggestions" class="address-suggestions"></div>
+            <section class="search-panel">
+                <div>
+                    <h2>Search for Doctors</h2>
+                    <form id="searchForm">
+                    <div class="form-group">
+                        <label for="addressSearch">Address</label>
+                        <div class="address-search-container">
+                            <input type="text" id="addressSearch" name="addressSearch" placeholder="Start typing an address in Toronto..." autocomplete="off" required>
+                            <div id="addressSuggestions" class="address-suggestions"></div>
+                        </div>
+                        <input type="hidden" id="selectedLat" name="selectedLat">
+                        <input type="hidden" id="selectedLng" name="selectedLng">
                     </div>
-                    <input type="hidden" id="selectedLat" name="selectedLat">
-                    <input type="hidden" id="selectedLng" name="selectedLng">
-                </div>
 
-                <div class="form-group">
-                    <label for="doctorType">Doctor Type</label>
-                    <select id="doctorType" name="doctorType">
-                        <option value="Any">Any</option>
-                        <option value="Family Doctor">Family Doctor</option>
-                        <optgroup label="Specialists">
-                            <option value="Specialist:Addiction Medicine">Addiction Medicine</option>
-                            <option value="Specialist:Adolescent Medicine">Adolescent Medicine</option>
-                            <option value="Specialist:Anatomical Pathology">Anatomical Pathology</option>
-                            <option value="Specialist:Anesthesiology">Anesthesiology</option>
-                            <option value="Specialist:Cardiology">Cardiology</option>
-                            <option value="Specialist:Cardiac Surgery">Cardiac Surgery</option>
-                            <option value="Specialist:Clinical Immunology and Allergy">Clinical Immunology and Allergy</option>
-                            <option value="Specialist:Critical Care Medicine ">Critical Care Medicine</option>
-                            <option value="Specialist:Dermatology">Dermatology</option>
-                            <option value="Specialist:Diagnostic Radiology">Diagnostic Radiology</option>
-                            <option value="Specialist:Emergency Medicine">Emergency Medicine</option>
-                            <option value="Specialist:Endocrinology and Metabolism">Endocrinology and Metabolism</option>
-                            <option value="Specialist:Family Medicine ">Family Medicine</option>
-                            <option value="Specialist:Gastroenterology">Gastroenterology</option>
-                            <option value="Specialist:General Internal Medicine">General Internal Medicine</option>
-                            <option value="Specialist:General Surgery">General Surgery</option>
-                            <option value="Specialist:Geriatric Medicine">Geriatric Medicine</option>
-                            <option value="Specialist:Hematology">Hematology</option>
-                            <option value="Specialist:Infectious Diseases">Infectious Diseases</option>
-                            <option value="Specialist:Internal Medicine">Internal Medicine</option>
-                            <option value="Specialist:Medical Genetics and Genomics">Medical Genetics and Genomics</option>
-                            <option value="Specialist:Medical Oncology">Medical Oncology</option>
-                            <option value="Specialist:Nephrology">Nephrology</option>
-                            <option value="Specialist:Neurology">Neurology</option>
-                            <option value="Specialist:Neurosurgery">Neurosurgery</option>
-                            <option value="Specialist:Nuclear Medicine">Nuclear Medicine</option>
-                            <option value="Specialist:Obstetrics and Gynecology">Obstetrics and Gynecology</option>
-                            <option value="Specialist:Occupational Medicine">Occupational Medicine</option>
-                            <option value="Specialist:Ophthalmology">Ophthalmology</option>
-                            <option value="Specialist:Orthopedic Surgery">Orthopedic Surgery</option>
-                            <option value="Specialist:Otolaryngology - Head and Neck Surgery">Otolaryngology - Head and Neck Surgery</option>
-                            <option value="Specialist:Pain Medicine">Pain Medicine</option>
-                            <option value="Specialist:Palliative Medicine ">Palliative Medicine</option>
-                            <option value="Specialist:Pediatrics">Pediatrics</option>
-                            <option value="Specialist:Physical Medicine and Rehabilitation">Physical Medicine and Rehabilitation</option>
-                            <option value="Specialist:Plastic Surgery">Plastic Surgery</option>
-                            <option value="Specialist:Psychiatry">Psychiatry</option>
-                            <option value="Specialist:Public Health and Preventive Medicine">Public Health and Preventive Medicine</option>
-                            <option value="Specialist:Radiation Oncology">Radiation Oncology</option>
-                            <option value="Specialist:Respirology">Respirology</option>
-                            <option value="Specialist:Rheumatology">Rheumatology</option>
-                            <option value="Specialist:Sport and Exercise Medicine">Sport and Exercise Medicine</option>
-                            <option value="Specialist:Thoracic Surgery">Thoracic Surgery</option>
-                            <option value="Specialist:Urology">Urology</option>
-                            <option value="Specialist:Vascular Surgery">Vascular Surgery</option>
-                        </optgroup>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="doctorType">Doctor Type</label>
+                        <select id="doctorType" name="doctorType">
+                            <option value="Any">Any</option>
+                            <option value="Family Doctor" selected>Family Doctor</option>
+                            <optgroup label="Specialists">
+                                <option value="Specialist:Addiction Medicine">Addiction Medicine</option>
+                                <option value="Specialist:Adolescent Medicine">Adolescent Medicine</option>
+                                <option value="Specialist:Anatomical Pathology">Anatomical Pathology</option>
+                                <option value="Specialist:Anesthesiology">Anesthesiology</option>
+                                <option value="Specialist:Cardiology">Cardiology</option>
+                                <option value="Specialist:Cardiac Surgery">Cardiac Surgery</option>
+                                <option value="Specialist:Clinical Immunology and Allergy">Clinical Immunology and Allergy</option>
+                                <option value="Specialist:Critical Care Medicine ">Critical Care Medicine</option>
+                                <option value="Specialist:Dermatology">Dermatology</option>
+                                <option value="Specialist:Diagnostic Radiology">Diagnostic Radiology</option>
+                                <option value="Specialist:Emergency Medicine">Emergency Medicine</option>
+                                <option value="Specialist:Endocrinology and Metabolism">Endocrinology and Metabolism</option>
+                                <option value="Specialist:Family Medicine ">Family Medicine</option>
+                                <option value="Specialist:Gastroenterology">Gastroenterology</option>
+                                <option value="Specialist:General Internal Medicine">General Internal Medicine</option>
+                                <option value="Specialist:General Surgery">General Surgery</option>
+                                <option value="Specialist:Geriatric Medicine">Geriatric Medicine</option>
+                                <option value="Specialist:Hematology">Hematology</option>
+                                <option value="Specialist:Infectious Diseases">Infectious Diseases</option>
+                                <option value="Specialist:Internal Medicine">Internal Medicine</option>
+                                <option value="Specialist:Medical Genetics and Genomics">Medical Genetics and Genomics</option>
+                                <option value="Specialist:Medical Oncology">Medical Oncology</option>
+                                <option value="Specialist:Nephrology">Nephrology</option>
+                                <option value="Specialist:Neurology">Neurology</option>
+                                <option value="Specialist:Neurosurgery">Neurosurgery</option>
+                                <option value="Specialist:Nuclear Medicine">Nuclear Medicine</option>
+                                <option value="Specialist:Obstetrics and Gynecology">Obstetrics and Gynecology</option>
+                                <option value="Specialist:Occupational Medicine">Occupational Medicine</option>
+                                <option value="Specialist:Ophthalmology">Ophthalmology</option>
+                                <option value="Specialist:Orthopedic Surgery">Orthopedic Surgery</option>
+                                <option value="Specialist:Otolaryngology - Head and Neck Surgery">Otolaryngology - Head and Neck Surgery</option>
+                                <option value="Specialist:Pain Medicine">Pain Medicine</option>
+                                <option value="Specialist:Palliative Medicine ">Palliative Medicine</option>
+                                <option value="Specialist:Pediatrics">Pediatrics</option>
+                                <option value="Specialist:Physical Medicine and Rehabilitation">Physical Medicine and Rehabilitation</option>
+                                <option value="Specialist:Plastic Surgery">Plastic Surgery</option>
+                                <option value="Specialist:Psychiatry">Psychiatry</option>
+                                <option value="Specialist:Public Health and Preventive Medicine">Public Health and Preventive Medicine</option>
+                                <option value="Specialist:Radiation Oncology">Radiation Oncology</option>
+                                <option value="Specialist:Respirology">Respirology</option>
+                                <option value="Specialist:Rheumatology">Rheumatology</option>
+                                <option value="Specialist:Sport and Exercise Medicine">Sport and Exercise Medicine</option>
+                                <option value="Specialist:Thoracic Surgery">Thoracic Surgery</option>
+                                <option value="Specialist:Urology">Urology</option>
+                                <option value="Specialist:Vascular Surgery">Vascular Surgery</option>
+                            </optgroup>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="maxDistance">Maximum Distance (km)</label>
-                    <input type="number" id="maxDistance" name="maxDistance" placeholder="5" value="5" min="1" max="100">
-                </div>
+                    <div class="form-group">
+                        <label for="maxDistance">Maximum Distance (km)</label>
+                        <input type="number" id="maxDistance" name="maxDistance" placeholder="5" value="5" min="1" max="100">
+                    </div>
 
-                <div class="form-group">
-                    <label for="language">Language</label>
-                    <select id="language" name="language">
-                        <option value="ENGLISH">English</option>
-                        <option value="FRENCH">French</option>
-                        <option value="MANDARIN">Mandarin</option>
-                        <option value="CANTONESE">Cantonese</option>
-                        <option value="SPANISH">Spanish</option>
-                        <option value="ARABIC">Arabic</option>
-                        <option value="PUNJABI">Punjabi</option>
-                        <option value="URDU">Urdu</option>
-                        <option value="TAGALOG">Tagalog</option>
-                        <option value="ITALIAN">Italian</option>
-                        <option value="PORTUGUESE">Portuguese</option>
-                        <option value="POLISH">Polish</option>
-                        <option value="RUSSIAN">Russian</option>
-                        <option value="KOREAN">Korean</option>
-                        <option value="JAPANESE">Japanese</option>
-                        <option value="HINDI">Hindi</option>
-                        <option value="TAMIL">Tamil</option>
-                        <option value="FARSI">Farsi</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="language">Language</label>
+                        <select id="language" name="language">
+                            <option value="ENGLISH">English</option>
+                            <option value="FRENCH">French</option>
+                            <option value="MANDARIN">Mandarin</option>
+                            <option value="CANTONESE">Cantonese</option>
+                            <option value="SPANISH">Spanish</option>
+                            <option value="ARABIC">Arabic</option>
+                            <option value="PUNJABI">Punjabi</option>
+                            <option value="URDU">Urdu</option>
+                            <option value="TAGALOG">Tagalog</option>
+                            <option value="ITALIAN">Italian</option>
+                            <option value="PORTUGUESE">Portuguese</option>
+                            <option value="POLISH">Polish</option>
+                            <option value="RUSSIAN">Russian</option>
+                            <option value="KOREAN">Korean</option>
+                            <option value="JAPANESE">Japanese</option>
+                            <option value="HINDI">Hindi</option>
+                            <option value="TAMIL">Tamil</option>
+                            <option value="FARSI">Farsi</option>
+                        </select>
+                    </div>
 
-                <button type="submit" class="search-btn">Search Doctors</button>
-            </form>
-        </section>
+                    <button type="submit" class="search-btn">Search Doctors</button>
+                </form>
+                </div>
+            </section>
+        </div>
 
         <section class="filters-section" id="filtersSection" style="display: none;">
             <div class="filter-group">
