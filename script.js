@@ -8,20 +8,45 @@ let postalCodeBoundaries = null;
 let fsaBoundaries = null;
 let geocodeCache = {}; // Cache for geocoding results
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const searchForm = document.getElementById('searchForm');
+    const compactSearchForm = document.getElementById('compactSearchForm');
     const addressSearchInput = document.getElementById('addressSearch');
+    const compactAddressSearchInput = document.getElementById('compactAddressSearch');
     const addressSuggestionsDiv = document.getElementById('addressSuggestions');
+    const compactAddressSuggestionsDiv = document.getElementById('compactAddressSuggestions');
     const filtersSection = document.getElementById('filtersSection');
     const resultsContainer = document.getElementById('resultsContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
-    
-    // Load GTA postal codes and boundaries
-    loadGTAPostalCodes();
-    loadFSABoundaries();
-    
+
+    // Load GTA postal codes and boundaries - wait for them to complete
+    await Promise.all([
+        loadGTAPostalCodes(),
+        loadFSABoundaries()
+    ]);
+
     searchForm.addEventListener('submit', handleSearch);
-    
+    compactSearchForm.addEventListener('submit', handleSearch);
+
+    // Auto-update search when compact form fields change
+    document.getElementById('compactDoctorType').addEventListener('change', function() {
+        if (document.getElementById('compactSearchSection').style.display !== 'none') {
+            autoSubmitCompactSearch();
+        }
+    });
+
+    document.getElementById('compactMaxDistance').addEventListener('change', function() {
+        if (document.getElementById('compactSearchSection').style.display !== 'none') {
+            autoSubmitCompactSearch();
+        }
+    });
+
+    document.getElementById('compactLanguage').addEventListener('change', function() {
+        if (document.getElementById('compactSearchSection').style.display !== 'none') {
+            autoSubmitCompactSearch();
+        }
+    });
+
     // Update postal codes when radius changes
     document.getElementById('maxDistance').addEventListener('input', function() {
         if (userCoordinates) {
@@ -30,34 +55,58 @@ document.addEventListener('DOMContentLoaded', function() {
             displayPostalCodes(postalCodesInRadius);
         }
     });
+
+    // Check for URL parameters on page load - AFTER data is loaded
+    checkURLParameters();
     
-    // Address search functionality
+    // Address search functionality for main form
     addressSearchInput.addEventListener('input', function() {
-        const query = this.value.trim();
-        
+        handleAddressInput(this, addressSuggestionsDiv, 'main');
+    });
+
+    // Address search functionality for compact form
+    compactAddressSearchInput.addEventListener('input', function() {
+        handleAddressInput(this, compactAddressSuggestionsDiv, 'compact');
+    });
+
+    function handleAddressInput(input, suggestionsDiv, formType) {
+        const query = input.value.trim();
+
         if (addressSearchTimeout) {
             clearTimeout(addressSearchTimeout);
         }
-        
+
         if (query.length < 3) {
-            hideSuggestions();
+            hideSuggestionsForForm(formType);
             // Clear coordinates if address is cleared
             if (query.length === 0) {
-                document.getElementById('selectedLat').value = '';
-                document.getElementById('selectedLng').value = '';
+                const latField = formType === 'main' ? 'selectedLat' : 'compactSelectedLat';
+                const lngField = formType === 'main' ? 'selectedLng' : 'compactSelectedLng';
+                document.getElementById(latField).value = '';
+                document.getElementById(lngField).value = '';
                 userCoordinates = null;
             }
             return;
         }
-        
+
         addressSearchTimeout = setTimeout(() => {
-            fetchAddressSuggestions(query);
+            fetchAddressSuggestions(query, formType);
         }, 300);
-    });
+    }
     
+    // Keyboard navigation for main form
     addressSearchInput.addEventListener('keydown', function(e) {
-        const suggestions = addressSuggestionsDiv.querySelectorAll('.address-suggestion-item');
-        
+        handleKeyboardNavigation(e, addressSuggestionsDiv);
+    });
+
+    // Keyboard navigation for compact form
+    compactAddressSearchInput.addEventListener('keydown', function(e) {
+        handleKeyboardNavigation(e, compactAddressSuggestionsDiv);
+    });
+
+    function handleKeyboardNavigation(e, suggestionsDiv) {
+        const suggestions = suggestionsDiv.querySelectorAll('.address-suggestion-item');
+
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestions.length - 1);
@@ -72,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (e.key === 'Escape') {
             hideSuggestions();
         }
-    });
+    }
     
     // Click outside to close suggestions
     document.addEventListener('click', function(e) {
@@ -98,40 +147,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-async function fetchAddressSuggestions(query) {
+async function fetchAddressSuggestions(query, formType = 'main') {
     try {
         const response = await fetch(`/api/address-suggest?searchString=${encodeURIComponent(query)}`);
         const data = await response.json();
-        
+
         if (data.suggestions && data.suggestions.length > 0) {
-            displaySuggestions(data.suggestions);
+            displaySuggestions(data.suggestions, formType);
         } else {
-            displayNoMatchesWarning();
+            displayNoMatchesWarning(formType);
         }
     } catch (error) {
         console.error('Error fetching address suggestions:', error);
-        hideSuggestions();
+        hideSuggestionsForForm(formType);
     }
 }
 
-function displaySuggestions(suggestions) {
-    const suggestionsDiv = document.getElementById('addressSuggestions');
+function displaySuggestions(suggestions, formType = 'main') {
+    const suggestionsDiv = formType === 'main' ?
+        document.getElementById('addressSuggestions') :
+        document.getElementById('compactAddressSuggestions');
     suggestionsDiv.innerHTML = '';
     selectedSuggestionIndex = -1;
-    
+
     suggestions.forEach((suggestion, index) => {
         const div = document.createElement('div');
         div.className = 'address-suggestion-item';
         div.textContent = suggestion.address;
         div.dataset.keyString = suggestion.keyString;
-        
+
         div.addEventListener('click', async function() {
-            await selectAddress(suggestion);
+            await selectAddress(suggestion, formType);
         });
-        
+
         suggestionsDiv.appendChild(div);
     });
-    
+
     suggestionsDiv.classList.add('active');
 }
 
@@ -146,27 +197,44 @@ function highlightSuggestion(suggestions) {
 }
 
 function hideSuggestions() {
-    const suggestionsDiv = document.getElementById('addressSuggestions');
+    hideSuggestionsForForm('main');
+    hideSuggestionsForForm('compact');
+}
+
+function hideSuggestionsForForm(formType) {
+    const suggestionsDiv = formType === 'main' ?
+        document.getElementById('addressSuggestions') :
+        document.getElementById('compactAddressSuggestions');
     suggestionsDiv.classList.remove('active');
     suggestionsDiv.innerHTML = '';
     selectedSuggestionIndex = -1;
 }
 
-function displayNoMatchesWarning() {
-    const suggestionsDiv = document.getElementById('addressSuggestions');
+function displayNoMatchesWarning(formType = 'main') {
+    const suggestionsDiv = formType === 'main' ?
+        document.getElementById('addressSuggestions') :
+        document.getElementById('compactAddressSuggestions');
     suggestionsDiv.innerHTML = '<div class="no-matches-warning">No matching address found. Type the beginning of an address to see address suggestions.</div>';
     suggestionsDiv.classList.add('active');
     selectedSuggestionIndex = -1;
 }
 
-async function selectAddress(suggestion) {
-    const addressSearchInput = document.getElementById('addressSearch');
-    const selectedLatInput = document.getElementById('selectedLat');
-    const selectedLngInput = document.getElementById('selectedLng');
-    const maxDistanceInput = document.getElementById('maxDistance');
-    
+async function selectAddress(suggestion, formType = 'main') {
+    const addressSearchInput = formType === 'main' ?
+        document.getElementById('addressSearch') :
+        document.getElementById('compactAddressSearch');
+    const selectedLatInput = formType === 'main' ?
+        document.getElementById('selectedLat') :
+        document.getElementById('compactSelectedLat');
+    const selectedLngInput = formType === 'main' ?
+        document.getElementById('selectedLng') :
+        document.getElementById('compactSelectedLng');
+    const maxDistanceInput = formType === 'main' ?
+        document.getElementById('maxDistance') :
+        document.getElementById('compactMaxDistance');
+
     addressSearchInput.value = suggestion.address;
-    hideSuggestions();
+    hideSuggestionsForForm(formType);
     
     // Check if this address is already cached
     if (geocodeCache[suggestion.address]) {
@@ -215,7 +283,7 @@ async function handleSearch(e) {
     const language = formData.get('language');
     const maxDistance = parseFloat(formData.get('maxDistance'));
     const addressValue = formData.get('addressSearch');
-    
+
     // Parse the doctor type selection
     let doctorType = 'Any';
     let specialistType = null;
@@ -227,16 +295,19 @@ async function handleSearch(e) {
     }
     const selectedLat = formData.get('selectedLat');
     const selectedLng = formData.get('selectedLng');
-    
+
     // Check if coordinates are available from address search or current location
     if (selectedLat && selectedLng) {
         userCoordinates = { lat: parseFloat(selectedLat), lng: parseFloat(selectedLng) };
     }
-    
+
     if (!userCoordinates) {
         displayError('Please select a valid address. Start typing an address and wait for address suggestions to load, and select one from the drop down list.');
         return;
     }
+
+    // Update URL with search parameters
+    updateURLWithSearchParams(addressValue, selectedLat, selectedLng, doctorTypeRaw, maxDistance, language);
     
     // Check if searching from a different location than last time
     if (lastSearchCoordinates && 
@@ -251,8 +322,8 @@ async function handleSearch(e) {
     // Store current search coordinates
     lastSearchCoordinates = { lat: userCoordinates.lat, lng: userCoordinates.lng };
 
-    // Switch to results view
-    switchToResultsView(addressValue, doctorTypeRaw, maxDistance, language);
+    // Switch to compact search view and populate it
+    switchToCompactSearch(addressValue, doctorTypeRaw, maxDistance, language, selectedLat, selectedLng);
 
     showLoading(true);
     
@@ -1160,31 +1231,77 @@ function updateDoctorGenderInUI(cpsoNumber, gender) {
     }
 }
 
-// Switch to results view
-function switchToResultsView(address, doctorType, distance, language) {
+// Switch to compact search view
+function switchToCompactSearch(address, doctorType, distance, language, lat, lng) {
     // Hide the two-panel main content
     document.querySelector('.main-content').style.display = 'none';
 
-    // Show and populate the search summary
-    document.getElementById('searchSummary').style.display = 'block';
-    document.getElementById('summaryAddress').textContent = address;
-    document.getElementById('summaryDoctorType').textContent = doctorType.replace('Specialist:', '');
-    document.getElementById('summaryDistance').textContent = distance;
-    document.getElementById('summaryLanguage').textContent = language;
+    // Show the compact search section
+    document.getElementById('compactSearchSection').style.display = 'block';
+
+    // Populate the compact search form with current values
+    document.getElementById('compactAddressSearch').value = address;
+    document.getElementById('compactDoctorType').value = doctorType;
+    document.getElementById('compactMaxDistance').value = distance;
+    document.getElementById('compactLanguage').value = language;
+    document.getElementById('compactSelectedLat').value = lat;
+    document.getElementById('compactSelectedLng').value = lng;
 }
 
-// Reset to search view
-function resetToSearchView() {
-    // Show the two-panel main content
-    document.querySelector('.main-content').style.display = 'grid';
+// Auto-submit compact search when fields change
+function autoSubmitCompactSearch() {
+    const compactForm = document.getElementById('compactSearchForm');
+    const selectedLat = document.getElementById('compactSelectedLat').value;
+    const selectedLng = document.getElementById('compactSelectedLng').value;
 
-    // Hide search summary, filters, and results
-    document.getElementById('searchSummary').style.display = 'none';
-    document.getElementById('filtersSection').style.display = 'none';
-    document.getElementById('resultsContainer').innerHTML = '';
-
-    // Reset search state
-    allDoctors = [];
-    lastSearchCoordinates = null;
+    // Only auto-submit if we have valid coordinates
+    if (selectedLat && selectedLng) {
+        compactForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
 }
+
+// Update URL with search parameters
+function updateURLWithSearchParams(address, lat, lng, doctorType, distance, language) {
+    const params = new URLSearchParams();
+    params.set('address', address);
+    params.set('lat', lat);
+    params.set('lng', lng);
+    params.set('type', doctorType);
+    params.set('distance', distance);
+    params.set('language', language);
+
+    const newURL = `${window.location.pathname}?${params.toString()}`;
+    window.history.pushState({ path: newURL }, '', newURL);
+}
+
+// Check URL parameters on page load
+async function checkURLParameters() {
+    const params = new URLSearchParams(window.location.search);
+
+    const address = params.get('address');
+    const lat = params.get('lat');
+    const lng = params.get('lng');
+    const doctorType = params.get('type');
+    const distance = params.get('distance');
+    const language = params.get('language');
+
+    // If we have all required parameters, execute the search
+    if (address && lat && lng && doctorType && distance && language) {
+        // Populate the main search form
+        document.getElementById('addressSearch').value = address;
+        document.getElementById('selectedLat').value = lat;
+        document.getElementById('selectedLng').value = lng;
+        document.getElementById('doctorType').value = doctorType;
+        document.getElementById('maxDistance').value = distance;
+        document.getElementById('language').value = language;
+
+        // Set user coordinates
+        userCoordinates = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+        // Trigger the search
+        const searchForm = document.getElementById('searchForm');
+        searchForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+}
+
 
