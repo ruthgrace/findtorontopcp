@@ -6,17 +6,21 @@
     <title>Find Toronto Doctors</title>
     <link rel="stylesheet" href="styles.css">
     <script>
-        // Hide main-content immediately if URL has search parameters
+        // Hide main-content and adjust layout immediately if URL has search parameters
         (function() {
             const params = new URLSearchParams(window.location.search);
             if (params.has('address') && params.has('lat') && params.has('lng')) {
                 document.documentElement.style.setProperty('--main-content-display', 'none');
+                document.documentElement.style.setProperty('--container-justify', 'flex-start');
             }
         })();
     </script>
     <style>
         .main-content {
             display: var(--main-content-display, flex);
+        }
+        .container {
+            justify-content: var(--container-justify, center);
         }
     </style>
 </head>
