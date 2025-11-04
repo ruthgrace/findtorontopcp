@@ -278,6 +278,10 @@ async function selectAddress(suggestion, formType = 'main') {
 async function handleSearch(e) {
     e.preventDefault();
 
+    // Immediately adjust layout to move content to top
+    document.documentElement.style.setProperty('--container-justify', 'flex-start');
+    document.documentElement.style.setProperty('--body-padding-top', '0');
+
     const formData = new FormData(e.target);
     const doctorTypeRaw = formData.get('doctorType');
     const language = formData.get('language');

@@ -12,6 +12,7 @@
             if (params.has('address') && params.has('lat') && params.has('lng')) {
                 document.documentElement.style.setProperty('--main-content-display', 'none');
                 document.documentElement.style.setProperty('--container-justify', 'flex-start');
+                document.documentElement.style.setProperty('--body-padding-top', '0');
             }
         })();
     </script>
@@ -21,6 +22,9 @@
         }
         .container {
             justify-content: var(--container-justify, center);
+        }
+        body {
+            padding-top: var(--body-padding-top, 15px);
         }
     </style>
 </head>
