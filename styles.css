@@ -22,7 +22,6 @@ body {
 }
 
 .main-content {
-    display: flex;
     gap: 25px;
     align-items: center;
     justify-content: center;
