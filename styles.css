@@ -21,10 +21,15 @@ body {
 }
 
 .main-content {
+    display: flex;
+    flex-direction: row;
     gap: 25px;
     align-items: center;
     justify-content: center;
     width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 .info-panel {
@@ -580,7 +585,12 @@ body {
 
 @media (max-width: 768px) {
     .main-content {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        padding: 0 15px;
+    }
+
+    .info-panel {
+        padding: 20px 15px;
     }
 
     .info-panel h1 {
@@ -588,7 +598,11 @@ body {
     }
 
     .info-text p {
-        font-size: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .search-panel > div {
+        padding: 20px;
     }
 
     .search-panel h2 {
