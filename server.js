@@ -376,12 +376,54 @@ app.get('/api/stats', async (req, res) => {
         if (!dbInitialized) {
             return res.status(503).json({ error: 'Database not initialized' });
         }
-        
+
         const stats = await db.getDatabaseStats();
         res.json(stats);
     } catch (error) {
         console.error('Error getting stats:', error);
         res.status(500).json({ error: 'Failed to get statistics' });
+    }
+});
+
+// TEMPORARY DEBUG ENDPOINT - For database recovery
+// Uses the server's existing 66-day-old database connection
+app.get('/api/debug/dump-all-data', async (req, res) => {
+    try {
+        if (!dbInitialized) {
+            return res.status(503).json({
+                success: false,
+                error: 'Database not initialized'
+            });
+        }
+
+        console.log('DEBUG: Dumping all data from existing server connection...');
+
+        // Use the existing connection that's been open since Aug 30
+        const result = await db.dumpAllData();
+
+        if (result.success) {
+            res.json({
+                success: true,
+                doctors: result.doctors,
+                geocoding: result.geocoding,
+                metadata: {
+                    dumpedAt: new Date().toISOString(),
+                    doctorCount: result.doctors.length,
+                    geocodingCount: result.geocoding.length
+                }
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: result.error
+            });
+        }
+    } catch (error) {
+        console.error('DEBUG: Error in dump endpoint:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 });
 

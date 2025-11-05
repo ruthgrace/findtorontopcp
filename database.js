@@ -36,8 +36,10 @@ async function initDatabase() {
                 status TEXT,
                 cpso_number TEXT,
                 postal_code TEXT,
+                gender TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(name, address)
             )
         `);
 
@@ -141,156 +143,66 @@ async function saveDoctor(doctorData) {
     }
 }
 
-// Batch save doctors - optimized for large datasets
+// Batch save doctors - optimized for large datasets using UPSERT
 async function saveDoctorsBatch(doctors) {
     try {
         const startTime = Date.now();
         await db.run('BEGIN TRANSACTION');
-        
-        // Create a composite key for uniquely identifying doctors (name + address)
-        const getDoctorKey = (doc) => `${doc.name}|${doc.address}`;
-        
-        // Get all existing doctors we might update
-        const doctorKeys = doctors.map(d => getDoctorKey(d));
-        
-        // Fetch existing doctors in batches (SQLite has parameter limit)
-        const BATCH_SIZE = 500;
-        const existingMap = new Map();
-        
-        // We need to check by name AND address combo since multiple doctors can share an address
-        const existingDoctors = await db.all(
-            `SELECT name, specialty, address, phone, languages, status, cpso_number, postal_code 
-             FROM doctors`
-        );
-        
-        existingDoctors.forEach(doc => {
-            const key = getDoctorKey(doc);
-            existingMap.set(key, doc);
-        });
-        
-        let inserted = 0, updated = 0, skipped = 0;
-        const updateBatch = [];
-        const insertBatch = [];
-        
+
+        let processed = 0, skipped = 0;
+
+        // Prepare the UPSERT statement
+        // Uses INSERT ... ON CONFLICT to efficiently handle inserts and updates
+        const stmt = await db.prepare(`
+            INSERT INTO doctors (name, specialty, address, phone, languages, status, cpso_number, postal_code, gender, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(name, address) DO UPDATE SET
+                specialty = excluded.specialty,
+                phone = excluded.phone,
+                languages = excluded.languages,
+                status = excluded.status,
+                cpso_number = excluded.cpso_number,
+                postal_code = excluded.postal_code,
+                gender = CASE
+                    WHEN excluded.gender IS NOT NULL AND excluded.gender != '' THEN excluded.gender
+                    ELSE doctors.gender
+                END,
+                updated_at = CURRENT_TIMESTAMP
+        `);
+
         for (const doctor of doctors) {
             // Skip doctors with invalid addresses
             if (!doctor.address || typeof doctor.address !== 'string' || !doctor.address.trim()) {
                 skipped++;
                 continue;
             }
-            
-            const doctorKey = getDoctorKey(doctor);
-            const existing = existingMap.get(doctorKey);
-            
-            if (!existing) {
-                insertBatch.push(doctor);
-                inserted++;
-            } else if (hasDataChanged(existing, doctor)) {
-                updateBatch.push(doctor);
-                updated++;
-            } else {
-                skipped++;
-            }
-        }
-        
-        // Batch inserts
-        if (insertBatch.length > 0) {
-            const insertStmt = await db.prepare(
-                `INSERT INTO doctors 
-                 (name, specialty, address, phone, languages, status, cpso_number, postal_code, gender, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+
+            await stmt.run(
+                doctor.name,
+                doctor.specialty,
+                doctor.address,
+                doctor.phone,
+                doctor.languages,
+                doctor.status,
+                doctor.cpsoNumber || doctor.cpsonumber,
+                doctor.searchPostalCode || null,
+                doctor.gender || null
             );
-            
-            for (const doctor of insertBatch) {
-                await insertStmt.run(
-                    doctor.name,
-                    doctor.specialty,
-                    doctor.address,
-                    doctor.phone,
-                    doctor.languages,
-                    doctor.status,
-                    doctor.cpsoNumber || doctor.cpsonumber,
-                    doctor.searchPostalCode || null,
-                    doctor.gender || null
-                );
-            }
-            await insertStmt.finalize();
+            processed++;
         }
-        
-        // Batch updates
-        if (updateBatch.length > 0) {
-            // Prepare different update statements based on whether we have gender data
-            for (const doctor of updateBatch) {
-                if (doctor.gender && doctor.gender !== '') {
-                    // Update including gender (when we have new gender data)
-                    await db.run(
-                        `UPDATE doctors SET
-                         specialty = ?, phone = ?, languages = ?, 
-                         status = ?, cpso_number = ?, postal_code = ?, gender = ?, updated_at = CURRENT_TIMESTAMP
-                         WHERE name = ? AND address = ?`,
-                        [
-                            doctor.specialty,
-                            doctor.phone,
-                            doctor.languages,
-                            doctor.status,
-                            doctor.cpsoNumber || doctor.cpsonumber,
-                            doctor.searchPostalCode || null,
-                            doctor.gender,
-                            doctor.name,
-                            doctor.address
-                        ]
-                    );
-                } else {
-                    // Update without touching gender (preserve existing gender data)
-                    await db.run(
-                        `UPDATE doctors SET
-                         specialty = ?, phone = ?, languages = ?, 
-                         status = ?, cpso_number = ?, postal_code = ?, updated_at = CURRENT_TIMESTAMP
-                         WHERE name = ? AND address = ?`,
-                        [
-                            doctor.specialty,
-                            doctor.phone,
-                            doctor.languages,
-                            doctor.status,
-                            doctor.cpsoNumber || doctor.cpsonumber,
-                            doctor.searchPostalCode || null,
-                            doctor.name,
-                            doctor.address
-                        ]
-                    );
-                }
-            }
-        }
-        
+
+        await stmt.finalize();
         await db.run('COMMIT');
-        
+
         const elapsed = Date.now() - startTime;
-        console.log(`Database update in ${elapsed}ms: ${inserted} new, ${updated} modified, ${skipped} unchanged (total: ${doctors.length})`);
-        
-        return { inserted, updated, skipped, elapsed };
+        console.log(`Database update in ${elapsed}ms: ${processed} processed, ${skipped} skipped (total: ${doctors.length})`);
+
+        return { processed, skipped, elapsed };
     } catch (error) {
         await db.run('ROLLBACK');
         console.error('Error in batch save:', error);
         throw error;
     }
-}
-
-// Helper function to check if doctor data has changed
-function hasDataChanged(existing, newData) {
-    const newCpsoNumber = newData.cpsoNumber || newData.cpsonumber;
-    
-    // Always update if we have a new CPSO number and the existing one is null/empty
-    if (newCpsoNumber && (!existing.cpso_number || existing.cpso_number === '')) {
-        return true;
-    }
-    
-    return existing.name !== newData.name ||
-           existing.specialty !== newData.specialty ||
-           existing.phone !== newData.phone ||
-           existing.languages !== newData.languages ||
-           existing.status !== newData.status ||
-           existing.cpso_number !== newCpsoNumber ||
-           existing.postal_code !== (newData.searchPostalCode || null);
 }
 
 // Get geocoding for an address
@@ -578,6 +490,33 @@ async function getPostalCodesNeedingUpdate(postalCodes) {
     }
 }
 
+// TEMPORARY: Dump all data from existing connection (for recovery)
+async function dumpAllData() {
+    try {
+        console.log('Attempting to dump all data from existing database connection...');
+
+        const doctors = await db.all('SELECT * FROM doctors');
+        console.log(`Retrieved ${doctors.length} doctors`);
+
+        const geocoding = await db.all('SELECT * FROM geocoding');
+        console.log(`Retrieved ${geocoding.length} geocoding entries`);
+
+        return {
+            doctors,
+            geocoding,
+            success: true
+        };
+    } catch (error) {
+        console.error('Error dumping data:', error);
+        return {
+            doctors: [],
+            geocoding: [],
+            success: false,
+            error: error.message
+        };
+    }
+}
+
 // Close database connection
 async function closeDatabase() {
     if (db) {
@@ -601,6 +540,6 @@ module.exports = {
     getDoctorsByPostalCodes,
     getDoctorsByCpsoNumbers,
     getPostalCodesNeedingUpdate,
-    closeDatabase,
-    hasDataChanged
+    dumpAllData,
+    closeDatabase
 };
