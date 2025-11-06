@@ -37,7 +37,12 @@ class ParallelCPSOSearcher {
                 throw new Error(`HTTP ${response.status}`);
             }
 
-            const data = await response.json();
+            // Get raw text and fix malformed JSON from CPSO API
+            // CPSO sometimes returns addresses with unescaped backslashes like: "street1": "95 Homewood Ave\"
+            // This breaks JSON parsing, so we need to escape them properly
+            const rawText = await response.text();
+            const fixedText = rawText.replace(/([^\\])\\"/g, '$1\\\\"');
+            const data = JSON.parse(fixedText);
             return { postalCode, data, success: true };
 
         } catch (error) {
