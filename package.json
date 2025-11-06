@@ -10,6 +10,7 @@
   "dependencies": {
     "@turf/projection": "^7.2.0",
     "@turf/turf": "^7.2.0",
+    "compression": "^1.8.1",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "node-fetch": "^2.6.9",

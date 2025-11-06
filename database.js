@@ -145,63 +145,83 @@ async function saveDoctor(doctorData) {
 
 // Batch save doctors - optimized for large datasets using UPSERT
 async function saveDoctorsBatch(doctors) {
-    try {
-        const startTime = Date.now();
-        await db.run('BEGIN TRANSACTION');
+    const maxRetries = 5;
+    const startTime = Date.now();
 
-        let processed = 0, skipped = 0;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            // Use IMMEDIATE to lock database right away, preventing conflicts
+            await db.run('BEGIN IMMEDIATE TRANSACTION');
 
-        // Prepare the UPSERT statement
-        // Uses INSERT ... ON CONFLICT to efficiently handle inserts and updates
-        const stmt = await db.prepare(`
-            INSERT INTO doctors (name, specialty, address, phone, languages, status, cpso_number, postal_code, gender, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(name, address) DO UPDATE SET
-                specialty = excluded.specialty,
-                phone = excluded.phone,
-                languages = excluded.languages,
-                status = excluded.status,
-                cpso_number = excluded.cpso_number,
-                postal_code = excluded.postal_code,
-                gender = CASE
-                    WHEN excluded.gender IS NOT NULL AND excluded.gender != '' THEN excluded.gender
-                    ELSE doctors.gender
-                END,
-                updated_at = CURRENT_TIMESTAMP
-        `);
+            let processed = 0, skipped = 0;
 
-        for (const doctor of doctors) {
-            // Skip doctors with invalid addresses
-            if (!doctor.address || typeof doctor.address !== 'string' || !doctor.address.trim()) {
-                skipped++;
+            // Prepare the UPSERT statement
+            // Uses INSERT ... ON CONFLICT to efficiently handle inserts and updates
+            const stmt = await db.prepare(`
+                INSERT INTO doctors (name, specialty, address, phone, languages, status, cpso_number, postal_code, gender, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(name, address) DO UPDATE SET
+                    specialty = excluded.specialty,
+                    phone = excluded.phone,
+                    languages = excluded.languages,
+                    status = excluded.status,
+                    cpso_number = excluded.cpso_number,
+                    postal_code = excluded.postal_code,
+                    gender = CASE
+                        WHEN excluded.gender IS NOT NULL AND excluded.gender != '' THEN excluded.gender
+                        ELSE doctors.gender
+                    END,
+                    updated_at = CURRENT_TIMESTAMP
+            `);
+
+            for (const doctor of doctors) {
+                // Skip doctors with invalid addresses
+                if (!doctor.address || typeof doctor.address !== 'string' || !doctor.address.trim()) {
+                    skipped++;
+                    continue;
+                }
+
+                await stmt.run(
+                    doctor.name,
+                    doctor.specialty,
+                    doctor.address,
+                    doctor.phone,
+                    doctor.languages,
+                    doctor.status,
+                    doctor.cpsoNumber || doctor.cpsonumber,
+                    doctor.searchPostalCode || null,
+                    doctor.gender || null
+                );
+                processed++;
+            }
+
+            await stmt.finalize();
+            await db.run('COMMIT');
+
+            const elapsed = Date.now() - startTime;
+            console.log(`Database update in ${elapsed}ms: ${processed} processed, ${skipped} skipped (total: ${doctors.length})`);
+
+            return { processed, skipped, elapsed };
+
+        } catch (error) {
+            // Try to rollback if we started a transaction
+            try {
+                await db.run('ROLLBACK');
+            } catch (rollbackError) {
+                // Ignore rollback errors (might not be in transaction)
+            }
+
+            // Retry on SQLITE_BUSY, otherwise throw
+            if ((error.code === 'SQLITE_BUSY' || error.code === 'SQLITE_LOCKED') && attempt < maxRetries - 1) {
+                const delay = 100 * (attempt + 1); // 100ms, 200ms, 300ms, etc.
+                console.log(`Database busy, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
                 continue;
             }
 
-            await stmt.run(
-                doctor.name,
-                doctor.specialty,
-                doctor.address,
-                doctor.phone,
-                doctor.languages,
-                doctor.status,
-                doctor.cpsoNumber || doctor.cpsonumber,
-                doctor.searchPostalCode || null,
-                doctor.gender || null
-            );
-            processed++;
+            console.error('Error in batch save:', error);
+            throw error;
         }
-
-        await stmt.finalize();
-        await db.run('COMMIT');
-
-        const elapsed = Date.now() - startTime;
-        console.log(`Database update in ${elapsed}ms: ${processed} processed, ${skipped} skipped (total: ${doctors.length})`);
-
-        return { processed, skipped, elapsed };
-    } catch (error) {
-        await db.run('ROLLBACK');
-        console.error('Error in batch save:', error);
-        throw error;
     }
 }
 

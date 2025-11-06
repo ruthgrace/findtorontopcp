@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 const fetch = require('node-fetch');
 const fs = require('fs');
@@ -11,6 +12,13 @@ const { fetchGenderFromCPSO } = require('./gender-fetcher');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+
+// Enable gzip compression for all responses
+// Configure to compress responses >= 1KB
+app.use(compression({
+    threshold: 1024, // Only compress responses larger than 1KB
+    level: 6 // Compression level (0-9, 6 is default balance)
+}));
 
 // Initialize database and load geocode cache
 let geocodeCache = {};
@@ -211,9 +219,9 @@ app.post('/api/parallel-search', async (req, res) => {
     try {
         const { postalCodes, doctorType, specialistType, language } = req.body;
         console.log(`Hybrid search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
-        
+
         const startTime = Date.now();
-        
+
         // Step 1: Always get fresh data from CPSO (definitive doctor list)
         console.log('Fetching fresh data from CPSO...');
         const searcher = new ParallelCPSOSearcher({
@@ -222,7 +230,7 @@ app.post('/api/parallel-search', async (req, res) => {
             retryAttempts: 3,
             retryDelay: 1000
         });
-        
+
         const cpsoDoctors = await searcher.smartSearchWithParallel(
             postalCodes,
             doctorType || 'Any',
@@ -266,26 +274,26 @@ app.post('/api/parallel-search', async (req, res) => {
         // Step 5: Save/update all doctors to database (with gender data preserved)
         console.log(`Saving ${finalDoctors.length} doctors to database...`);
         await db.saveDoctorsBatch(finalDoctors);
-        
+
         const duration = Date.now() - startTime;
         const doctorsWithGender = finalDoctors.filter(d => d.gender && d.gender !== null).length;
-        
+
         console.log(`Search completed in ${duration}ms:`);
         console.log(`  - ${cpsoDoctors.length} doctors from CPSO (definitive list)`);
         console.log(`  - ${doctorsWithGender} doctors have gender data from database`);
         console.log(`  - ${finalDoctors.length - doctorsWithGender} doctors need gender fetching`);
-        
-        const response = { 
-            totalcount: finalDoctors.length, 
+
+        const response = {
+            totalcount: finalDoctors.length,
             results: finalDoctors,
             searchTime: duration,
             withGender: doctorsWithGender,
             needsGender: finalDoctors.length - doctorsWithGender
         };
-        
+
         const responseSize = JSON.stringify(response).length;
         console.log(`Sending response: ${responseSize} bytes, ${finalDoctors.length} doctors`);
-        
+
         res.json(response);
     } catch (error) {
         console.error('Parallel search error:', error);
