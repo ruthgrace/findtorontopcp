@@ -3,6 +3,7 @@ const compression = require('compression');
 const path = require('path');
 const fetch = require('node-fetch');
 const fs = require('fs');
+const PQueue = require('p-queue').default;
 require('dotenv').config();
 const db = require('./database');
 const { GOOGLE_MAPS_API_KEY } = require('./constants');
@@ -12,6 +13,19 @@ const { fetchGenderFromCPSO } = require('./gender-fetcher');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+
+// Request queues to prevent server overload on small instances
+// Allow only 2 concurrent heavy operations (search, geocoding)
+const searchQueue = new PQueue({
+    concurrency: 2,
+    timeout: 120000 // 2 minute timeout per search
+});
+const geocodeQueue = new PQueue({
+    concurrency: 2,
+    timeout: 60000 // 1 minute timeout per geocoding batch
+});
+
+console.log('Request queues initialized: max 2 concurrent searches, 2 concurrent geocoding operations');
 
 // Enable gzip compression for all responses
 // Configure to compress responses >= 1KB
@@ -220,11 +234,14 @@ app.post('/api/smart-search', async (req, res) => {
 
 // New parallel search endpoint for multiple postal codes
 app.post('/api/parallel-search', async (req, res) => {
-    try {
-        const { postalCodes, doctorType, specialistType, language } = req.body;
-        console.log(`Hybrid search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
+    // Add to queue to prevent server overload
+    searchQueue.add(async () => {
+        try {
+            const { postalCodes, doctorType, specialistType, language } = req.body;
+            const queueSize = searchQueue.size + searchQueue.pending;
+            console.log(`[Queue: ${queueSize} waiting] Hybrid search for ${postalCodes.length} postal codes, Type: ${doctorType}, Specialist: ${specialistType}`);
 
-        const startTime = Date.now();
+            const startTime = Date.now();
 
         // Step 1: Always get fresh data from CPSO (definitive doctor list)
         console.log('Fetching fresh data from CPSO...');
@@ -296,14 +313,21 @@ app.post('/api/parallel-search', async (req, res) => {
             needsGender: finalDoctors.length - doctorsWithGender
         };
 
-        const responseSize = JSON.stringify(response).length;
-        console.log(`Sending response: ${responseSize} bytes, ${finalDoctors.length} doctors`);
+            const responseSize = JSON.stringify(response).length;
+            console.log(`Sending response: ${responseSize} bytes, ${finalDoctors.length} doctors`);
 
-        res.json(response);
-    } catch (error) {
-        console.error('Parallel search error:', error);
-        res.status(500).json({ error: 'Parallel search failed' });
-    }
+            res.json(response);
+        } catch (error) {
+            console.error('Parallel search error:', error);
+            res.status(500).json({ error: 'Parallel search failed' });
+        }
+    }).catch(error => {
+        // Handle queue timeout or other queue errors
+        console.error('Search queue error:', error);
+        if (!res.headersSent) {
+            res.status(503).json({ error: 'Server busy, please try again' });
+        }
+    });
 });
 
 // Helper function to expand postal codes
@@ -549,40 +573,50 @@ app.post('/api/doctors-gender', async (req, res) => {
 
 // New batch geocoding endpoint with parallel processing
 app.post('/api/geocode-batch', async (req, res) => {
-    try {
-        const { addresses } = req.body;
-        
-        if (!addresses || !Array.isArray(addresses)) {
-            return res.status(400).json({ error: 'addresses array is required' });
-        }
-        
-        if (!parallelGeocoder) {
-            return res.status(503).json({ error: 'Geocoding service not initialized' });
-        }
-        
-        console.log(`Batch geocoding request for ${addresses.length} addresses`);
-        const startTime = Date.now();
+    // Add to queue to prevent server overload
+    geocodeQueue.add(async () => {
+        try {
+            const { addresses } = req.body;
+
+            if (!addresses || !Array.isArray(addresses)) {
+                return res.status(400).json({ error: 'addresses array is required' });
+            }
+
+            if (!parallelGeocoder) {
+                return res.status(503).json({ error: 'Geocoding service not initialized' });
+            }
+
+            const queueSize = geocodeQueue.size + geocodeQueue.pending;
+            console.log(`[Queue: ${queueSize} waiting] Batch geocoding request for ${addresses.length} addresses`);
+            const startTime = Date.now();
         
         const results = await parallelGeocoder.geocodeBatch(addresses);
         
         const duration = Date.now() - startTime;
         const successCount = Object.values(results).filter(coords => coords !== null).length;
         
-        console.log(`Batch geocoding completed in ${duration}ms. Success: ${successCount}/${addresses.length}`);
-        
-        res.json({
-            results,
-            stats: {
-                total: addresses.length,
-                success: successCount,
-                failed: addresses.length - successCount,
-                duration
-            }
-        });
-    } catch (error) {
-        console.error('Batch geocoding error:', error);
-        res.status(500).json({ error: 'Batch geocoding failed' });
-    }
+            console.log(`Batch geocoding completed in ${duration}ms. Success: ${successCount}/${addresses.length}`);
+
+            res.json({
+                results,
+                stats: {
+                    total: addresses.length,
+                    success: successCount,
+                    failed: addresses.length - successCount,
+                    duration
+                }
+            });
+        } catch (error) {
+            console.error('Batch geocoding error:', error);
+            res.status(500).json({ error: 'Batch geocoding failed' });
+        }
+    }).catch(error => {
+        // Handle queue timeout or other queue errors
+        console.error('Geocode queue error:', error);
+        if (!res.headersSent) {
+            res.status(503).json({ error: 'Server busy, please try again' });
+        }
+    });
 });
 
 app.get('/api/geocode-address', async (req, res) => {
