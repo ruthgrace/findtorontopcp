@@ -150,8 +150,8 @@ async function saveDoctorsBatch(doctors) {
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-            // Use IMMEDIATE to lock database right away, preventing conflicts
-            await db.run('BEGIN IMMEDIATE TRANSACTION');
+            // Use DEFERRED transaction for better concurrency (locks only on first write)
+            await db.run('BEGIN TRANSACTION');
 
             let processed = 0, skipped = 0;
 
@@ -260,23 +260,83 @@ async function saveGeocoding(address, lat, lng, source = 'geoapify') {
     }
 }
 
-// Batch save geocoding results
+// Batch save geocoding results (legacy - for object format)
 async function saveGeocodingBatch(geocodingData) {
     try {
         await db.run('BEGIN TRANSACTION');
-        
+
         for (const [address, coords] of Object.entries(geocodingData)) {
             if (coords && coords.lat && coords.lng) {
                 await saveGeocoding(address, coords.lat, coords.lng);
             }
         }
-        
+
         await db.run('COMMIT');
         console.log(`Saved ${Object.keys(geocodingData).length} geocoding entries to database`);
     } catch (error) {
         await db.run('ROLLBACK');
         console.error('Error in batch geocoding save:', error);
         throw error;
+    }
+}
+
+// Optimized batch save for geocoding - uses prepared statements
+async function saveGeocodingBatchOptimized(geocodingArray, source = 'google') {
+    if (!geocodingArray || geocodingArray.length === 0) {
+        return { processed: 0, elapsed: 0 };
+    }
+
+    const maxRetries = 5;
+    const startTime = Date.now();
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            // Use DEFERRED transaction for better concurrency (locks only on first write)
+            await db.run('BEGIN TRANSACTION');
+
+            // Prepare the INSERT OR REPLACE statement once
+            const stmt = await db.prepare(`
+                INSERT OR REPLACE INTO geocoding (address, latitude, longitude, source, geocoded_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            `);
+
+            let processed = 0;
+
+            // Execute the prepared statement for each geocoding entry
+            for (const item of geocodingArray) {
+                if (item && item.address && item.lat && item.lng) {
+                    await stmt.run(item.address, item.lat, item.lng, source);
+                    processed++;
+                }
+            }
+
+            await stmt.finalize();
+            await db.run('COMMIT');
+
+            const elapsed = Date.now() - startTime;
+            console.log(`Geocoding batch save in ${elapsed}ms: ${processed} addresses saved`);
+
+            return { processed, elapsed };
+
+        } catch (error) {
+            // Try to rollback if we started a transaction
+            try {
+                await db.run('ROLLBACK');
+            } catch (rollbackError) {
+                // Ignore rollback errors
+            }
+
+            // Retry on SQLITE_BUSY, otherwise throw
+            if ((error.code === 'SQLITE_BUSY' || error.code === 'SQLITE_LOCKED') && attempt < maxRetries - 1) {
+                const delay = 100 * (attempt + 1);
+                console.log(`Database busy during geocoding save, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+
+            console.error('Error in optimized batch geocoding save:', error);
+            throw error;
+        }
     }
 }
 
@@ -552,6 +612,7 @@ module.exports = {
     getGeocoding,
     saveGeocoding,
     saveGeocodingBatch,
+    saveGeocodingBatchOptimized,
     getAllGeocodedAddresses,
     searchDoctorsByPostalCode,
     getDatabaseStats,

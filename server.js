@@ -44,9 +44,12 @@ let parallelGeocoder = null;
             apiKey: GOOGLE_MAPS_API_KEY,
             concurrency: 20, // 20 parallel requests (well under 50/sec limit)
             cache: geocodeCache,
-            dbSaveFunction: db.saveGeocoding.bind(db)
+            dbSaveFunction: db.saveGeocoding.bind(db),
+            dbBatchSaveFunction: db.saveGeocodingBatchOptimized.bind(db),
+            batchSize: 100, // Batch database writes every 100 addresses
+            verbose: false  // Reduce logging to improve performance
         });
-        console.log('Parallel geocoder initialized with concurrency:', 20);
+        console.log('Parallel geocoder initialized with concurrency: 20, batch size: 100');
     } catch (error) {
         console.error('Failed to initialize database:', error);
         // Fall back to in-memory cache only
@@ -56,7 +59,8 @@ let parallelGeocoder = null;
         parallelGeocoder = new ParallelGeocoder({
             apiKey: GOOGLE_MAPS_API_KEY,
             concurrency: 20,
-            cache: geocodeCache
+            cache: geocodeCache,
+            verbose: false  // Reduce logging to improve performance
         });
     }
 })();
@@ -228,7 +232,8 @@ app.post('/api/parallel-search', async (req, res) => {
             concurrency: 20,
             delayBetweenBatches: 0,
             retryAttempts: 3,
-            retryDelay: 1000
+            retryDelay: 1000,
+            verbose: false  // Reduce logging to improve performance
         });
 
         const cpsoDoctors = await searcher.smartSearchWithParallel(

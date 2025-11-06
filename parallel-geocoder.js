@@ -9,6 +9,9 @@ class ParallelGeocoder {
         this.maxRetryDelay = options.maxRetryDelay || 32000; // 32 seconds
         this.cache = options.cache || {};
         this.dbSaveFunction = options.dbSaveFunction || null;
+        this.dbBatchSaveFunction = options.dbBatchSaveFunction || null;
+        this.batchSize = options.batchSize || 100; // Batch size for database writes
+        this.verbose = options.verbose !== undefined ? options.verbose : false;
     }
 
     async geocodeBatch(addresses) {
@@ -25,11 +28,11 @@ class ParallelGeocoder {
         }
 
         if (uncachedAddresses.length === 0) {
-            console.log(`All ${addresses.length} addresses found in cache`);
+            if (this.verbose) console.log(`All ${addresses.length} addresses found in cache`);
             return results;
         }
 
-        console.log(`Geocoding ${uncachedAddresses.length} uncached addresses (${addresses.length - uncachedAddresses.length} found in cache)`);
+        if (this.verbose) console.log(`Geocoding ${uncachedAddresses.length} uncached addresses (${addresses.length - uncachedAddresses.length} found in cache)`);
 
         // Process uncached addresses in parallel with concurrency control
         const chunks = [];
@@ -40,43 +43,58 @@ class ParallelGeocoder {
         let totalGeocoded = 0;
         let totalErrors = 0;
         let rateLimitHits = 0;
+        let pendingDbWrites = [];
 
         for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
             const chunk = chunks[chunkIndex];
-            console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} (${chunk.length} addresses)`);
-            
+            if (this.verbose) console.log(`Processing chunk ${chunkIndex + 1}/${chunks.length} (${chunk.length} addresses)`);
+
             const promises = chunk.map(address => this.geocodeSingleWithRetry(address));
             const chunkResults = await Promise.all(promises);
 
             // Process results
             for (const result of chunkResults) {
                 results[result.address] = result.coords;
-                
+
                 // Update cache
                 this.cache[result.address] = result.coords;
-                
+
                 // Track statistics
                 if (result.coords) {
                     totalGeocoded++;
+
+                    // Add to pending database writes
+                    pendingDbWrites.push({
+                        address: result.address,
+                        lat: result.coords.lat,
+                        lng: result.coords.lng
+                    });
                 } else if (result.error === 'OVER_QUERY_LIMIT') {
                     rateLimitHits++;
                 } else {
                     totalErrors++;
                 }
+            }
 
-                // Save to database if function provided
-                if (this.dbSaveFunction && result.coords) {
-                    this.dbSaveFunction(result.address, result.coords.lat, result.coords.lng, 'google')
-                        .catch(err => console.error('Error saving to database:', err));
-                }
+            // Batch save to database when we reach the batch size
+            if (pendingDbWrites.length >= this.batchSize) {
+                await this.saveBatchToDatabase(pendingDbWrites);
+                pendingDbWrites = [];
             }
 
             // Log progress
-            const progress = ((chunkIndex + 1) / chunks.length * 100).toFixed(1);
-            console.log(`Progress: ${progress}% - Geocoded: ${totalGeocoded}, Errors: ${totalErrors}, Rate limits: ${rateLimitHits}`);
+            if (this.verbose) {
+                const progress = ((chunkIndex + 1) / chunks.length * 100).toFixed(1);
+                console.log(`Progress: ${progress}% - Geocoded: ${totalGeocoded}, Errors: ${totalErrors}, Rate limits: ${rateLimitHits}`);
+            }
         }
 
-        console.log(`Geocoding complete. Success: ${totalGeocoded}, Failed: ${totalErrors}, Rate limit hits: ${rateLimitHits}`);
+        // Save any remaining pending writes
+        if (pendingDbWrites.length > 0) {
+            await this.saveBatchToDatabase(pendingDbWrites);
+        }
+
+        if (this.verbose) console.log(`Geocoding complete. Success: ${totalGeocoded}, Failed: ${totalErrors}, Rate limit hits: ${rateLimitHits}`);
         return results;
     }
 
@@ -105,29 +123,29 @@ class ParallelGeocoder {
                 const baseDelay = Math.min(this.initialRetryDelay * Math.pow(2, retryCount), this.maxRetryDelay);
                 const jitter = Math.random() * 0.3 * baseDelay; // Add up to 30% jitter
                 const delay = baseDelay + jitter;
-                
-                console.log(`Rate limit hit for "${address}". Retrying in ${Math.round(delay)}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
-                
+
+                if (this.verbose) console.log(`Rate limit hit for "${address}". Retrying in ${Math.round(delay)}ms (attempt ${retryCount + 1}/${this.maxRetries})`);
+
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return this.geocodeSingleWithRetry(address, retryCount + 1);
             } else if (data.status === 'ZERO_RESULTS') {
-                console.log(`No results found for: ${address}`);
+                if (this.verbose) console.log(`No results found for: ${address}`);
                 return { address, coords: null };
             } else if (data.status === 'OVER_QUERY_LIMIT') {
                 console.error(`Rate limit exceeded for "${address}" after ${this.maxRetries} retries`);
                 return { address, coords: null, error: 'OVER_QUERY_LIMIT' };
             } else {
-                console.log(`Geocoding failed for "${address}": ${data.status}`);
+                if (this.verbose) console.log(`Geocoding failed for "${address}": ${data.status}`);
                 return { address, coords: null, error: data.status };
             }
         } catch (error) {
             if (retryCount < this.maxRetries) {
                 const delay = Math.min(this.initialRetryDelay * Math.pow(2, retryCount), this.maxRetryDelay);
-                console.log(`Network error for "${address}": ${error.message}. Retrying in ${delay}ms`);
+                if (this.verbose) console.log(`Network error for "${address}": ${error.message}. Retrying in ${delay}ms`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return this.geocodeSingleWithRetry(address, retryCount + 1);
             }
-            
+
             console.error(`Failed to geocode "${address}" after ${this.maxRetries} retries:`, error.message);
             return { address, coords: null, error: error.message };
         }
@@ -140,17 +158,41 @@ class ParallelGeocoder {
         }
 
         const result = await this.geocodeSingleWithRetry(address);
-        
+
         // Update cache
         this.cache[address] = result.coords;
-        
-        // Save to database if function provided
+
+        // Save to database if function provided (single save for geocodeSingle)
         if (this.dbSaveFunction && result.coords) {
             this.dbSaveFunction(address, result.coords.lat, result.coords.lng, 'google')
                 .catch(err => console.error('Error saving to database:', err));
         }
 
         return result.coords;
+    }
+
+    async saveBatchToDatabase(batch) {
+        if (!batch || batch.length === 0) {
+            return;
+        }
+
+        try {
+            if (this.dbBatchSaveFunction) {
+                // Use optimized batch save function if available
+                await this.dbBatchSaveFunction(batch);
+                if (this.verbose) console.log(`Saved batch of ${batch.length} geocoding results to database`);
+            } else if (this.dbSaveFunction) {
+                // Fallback to individual saves if batch function not available
+                const promises = batch.map(item =>
+                    this.dbSaveFunction(item.address, item.lat, item.lng, 'google')
+                        .catch(err => console.error(`Error saving ${item.address}:`, err))
+                );
+                await Promise.all(promises);
+                if (this.verbose) console.log(`Saved batch of ${batch.length} geocoding results to database (individual saves)`);
+            }
+        } catch (error) {
+            console.error('Error in batch database save:', error);
+        }
     }
 }
 

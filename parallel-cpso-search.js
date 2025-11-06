@@ -6,6 +6,7 @@ class ParallelCPSOSearcher {
         this.delayBetweenBatches = options.delayBetweenBatches || 200;
         this.retryAttempts = options.retryAttempts || 3;
         this.retryDelay = options.retryDelay || 1000;
+        this.verbose = options.verbose !== undefined ? options.verbose : false;
     }
 
     async delay(ms) {
@@ -40,8 +41,8 @@ class ParallelCPSOSearcher {
             return { postalCode, data, success: true };
 
         } catch (error) {
-            console.log(`  Error searching ${postalCode} (attempt ${attempt}):`, error.message);
-            
+            if (this.verbose) console.log(`  Error searching ${postalCode} (attempt ${attempt}):`, error.message);
+
             if (attempt < this.retryAttempts) {
                 await this.delay(this.retryDelay * attempt);
                 return this.searchSinglePostalCode(postalCode, doctorType, specialistType, language, attempt + 1);
@@ -67,11 +68,11 @@ class ParallelCPSOSearcher {
             batches.push(postalCodes.slice(i, i + this.concurrency));
         }
 
-        console.log(`Processing ${postalCodes.length} postal codes in ${batches.length} batches (concurrency: ${this.concurrency})`);
+        if (this.verbose) console.log(`Processing ${postalCodes.length} postal codes in ${batches.length} batches (concurrency: ${this.concurrency})`);
 
         for (let i = 0; i < batches.length; i++) {
             const batch = batches[i];
-            console.log(`  Batch ${i + 1}/${batches.length}: ${batch.join(', ')}`);
+            if (this.verbose) console.log(`  Batch ${i + 1}/${batches.length}: ${batch.join(', ')}`);
             
             const batchResults = await this.searchBatch(batch, doctorType, specialistType, language);
             results.push(...batchResults);
@@ -135,16 +136,16 @@ class ParallelCPSOSearcher {
             
             for (const result of results) {
                 if (!result.success) {
-                    console.log(`    Failed to search ${result.postalCode}`);
+                    if (this.verbose) console.log(`    Failed to search ${result.postalCode}`);
                     continue;
                 }
-                
+
                 if (result.data.totalcount === -1) {
-                    console.log(`    ${result.postalCode}: Too many results, needs expansion`);
+                    if (this.verbose) console.log(`    ${result.postalCode}: Too many results, needs expansion`);
                     const expanded = this.expandPostalCode(result.postalCode);
                     codesToExpand.push(...expanded);
                 } else if (result.data.totalcount > 0) {
-                    console.log(`    ${result.postalCode}: Found ${result.data.totalcount} doctors`);
+                    if (this.verbose) console.log(`    ${result.postalCode}: Found ${result.data.totalcount} doctors`);
                     if (result.data.results) {
                         // Parse each doctor to include proper address field
                         const parsedDoctors = result.data.results.map(doc => {
@@ -167,7 +168,7 @@ class ParallelCPSOSearcher {
                         });
                         
                         // Debug: Check first parsed doctor
-                        if (parsedDoctors.length > 0 && !this.debugLogged) {
+                        if (this.verbose && parsedDoctors.length > 0 && !this.debugLogged) {
                             console.log(`    First parsed doctor: name=${parsedDoctors[0].name}, address=${parsedDoctors[0].address}, specialties=${parsedDoctors[0].specialties}`);
                             this.debugLogged = true;
                         }
@@ -185,20 +186,20 @@ class ParallelCPSOSearcher {
                                 duplicatesSkipped++;
                             }
                         }
-                        if (duplicatesSkipped > 0) {
+                        if (this.verbose && duplicatesSkipped > 0) {
                             console.log(`    Skipped ${duplicatesSkipped} duplicate doctors from ${result.postalCode}`);
                         }
                     }
                 } else {
-                    console.log(`    ${result.postalCode}: No doctors found`);
+                    if (this.verbose) console.log(`    ${result.postalCode}: No doctors found`);
                 }
             }
             
             // Set up next iteration with expanded codes
             postalCodesToSearch = codesToExpand;
         }
-        
-        console.log(`Total unique doctors found: ${allDoctors.length} (${seenCPSONumbers.size} with CPSO numbers)`);
+
+        if (this.verbose) console.log(`Total unique doctors found: ${allDoctors.length} (${seenCPSONumbers.size} with CPSO numbers)`);
         return allDoctors;
     }
 }
