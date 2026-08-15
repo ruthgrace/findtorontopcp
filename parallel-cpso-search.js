@@ -26,7 +26,11 @@ class ParallelCPSOSearcher {
             const response = await fetch('https://register.cpso.on.ca/Get-Search-Results/', {
                 method: 'POST',
                 headers: {
+                    'accept': '*/*',
                     'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'origin': 'https://register.cpso.on.ca',
+                    'referer': 'https://register.cpso.on.ca/Search-Results/',
+                    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
                     'x-requested-with': 'XMLHttpRequest'
                 },
                 body: searchParams.toString(),
